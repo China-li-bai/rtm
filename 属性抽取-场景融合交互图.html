@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>属性抽取 · 场景融合交互图</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif; background:#EDF0F4; color:#27313D; padding:26px 34px 40px; }
+  h1 { font-size:21px; }
+  h1 small { font-weight:400; font-size:13px; color:#6E7885; margin-left:12px; }
+  h2 { font-size:16px; margin-bottom:10px; }
+  h2 small { font-weight:400; font-size:12px; color:#6E7885; margin-left:10px; }
+  .card { background:#fff; border:1px solid #DDE2E8; border-radius:10px; box-shadow:0 4px 18px rgba(39,49,61,.08); }
+
+  /* ---------- 场景与约束卡 ---------- */
+  .whycards { display:grid; grid-template-columns:repeat(6, 1fr); gap:12px; width:1360px; margin:6px 0 20px; }
+  .wc { background:#fff; border:1px solid #DDE2E8; border-radius:10px; padding:11px 14px 10px; cursor:pointer; transition:.15s; }
+  .wc:hover { border-color:#FF4B16; box-shadow:0 4px 14px rgba(255,75,22,.2); }
+  .wc.scn { grid-column:span 2; border-top:3px solid #2B6CB8; }
+  .wc.con { grid-column:span 3; border-top:3px solid #FF4B16; }
+  .wc .row1 { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .chip-s { font-size:10.5px; font-weight:800; border-radius:9px; padding:1px 8px; }
+  .chip-s.s { color:#2B6CB8; background:#EAF2FF; border:1px solid #C4DAF5; }
+  .chip-s.c { color:#E24A10; background:#FDEFE7; border:1px solid #F5CBB5; }
+  .wc .name { font-size:14px; font-weight:800; }
+  .wc .kw { margin-left:auto; font-size:10.5px; font-weight:800; color:#E24A10; background:#FDEFE7; border:1px solid #F5CBB5; border-radius:9px; padding:1px 8px; }
+  .wc .story { font-size:11.8px; color:#5C6672; line-height:1.55; }
+  .wc .more { display:inline-block; margin-top:7px; font-size:11.5px; font-weight:700; color:#E24A10; }
+
+  /* ---------- 泳道流程 ---------- */
+  .flow { position:relative; width:1360px; height:560px; padding:0; }
+  .lane { position:absolute; left:12px; width:1336px; background:#F8F9FB; border-radius:8px; }
+  .lane-label { position:absolute; left:16px; width:100px; font-size:13px; font-weight:700; text-align:center; color:#27313D; }
+  .node { position:absolute; background:#fff; border:1px solid #E0E4E9; border-radius:8px; padding:10px 12px 8px; cursor:pointer; transition:.15s; z-index:3; }
+  .node:hover { border-color:#FF4B16; box-shadow:0 3px 12px rgba(255,75,22,.25); transform:translateY(-1px); }
+  .node.sel { border:2px solid #FF4B16; background:#FFF7F3; box-shadow:0 3px 14px rgba(255,75,22,.3); }
+  .node .no { display:inline-flex; width:22px; height:22px; border-radius:50%; background:#FF4B16; color:#fff; font-size:12px; font-weight:700; align-items:center; justify-content:center; margin-right:7px; flex:none; }
+  .node .tt { font-size:13.5px; font-weight:700; display:flex; align-items:center; }
+  .node .st { font-size:11.5px; color:#6E7885; margin-top:5px; line-height:1.45; }
+  .node .aip { position:absolute; right:8px; bottom:5px; font-size:10px; color:#44546A; font-weight:700; }
+  .node.hl { background:#FDEFE7; border-color:#F5CBB5; }
+  .node.dash { border-style:dashed; }
+  .node.diamond { background:#fff; border:1.5px solid #FF4B16; border-radius:6px; text-align:center; }
+  .bar { position:absolute; background:#FDEFE7; border:1.5px solid #F5CBB5; border-radius:8px; padding:9px 14px 9px 40px; cursor:pointer; z-index:3; }
+  .bar:hover, .bar.sel { border-color:#FF4B16; }
+  .bar .tt { font-size:13px; }
+  .bar .tt b { color:#E24A10; }
+  .loopchip { position:absolute; font-size:12px; font-weight:700; color:#E24A10; cursor:pointer; padding:4px 10px; border-radius:14px; border:1.5px dashed #FF4B16; background:#FFF7F3; z-index:4; }
+  .loopchip:hover, .loopchip.sel { background:#FDEFE7; }
+  svg.arrows { position:absolute; inset:0; z-index:2; pointer-events:none; }
+  .lab { position:absolute; font-size:12px; font-weight:800; color:#E24A10; z-index:3; }
+  .lab.g { color:#6E7885; }
+  .datasup { position:absolute; z-index:3; left:24px; font-size:11.5px; color:#6E7885; }
+  .datasup b { color:#44546A; }
+
+  /* ---------- 详情面板 ---------- */
+  .panel { width:1360px; margin-top:18px; padding:16px 22px 18px; display:none; }
+  .panel.show { display:block; }
+  .p-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .p-title { font-size:17px; font-weight:800; }
+  .p-aip { font-size:12px; font-weight:700; color:#44546A; background:#F0F2F6; border-radius:4px; padding:2px 8px; }
+  .bdg { font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:10px; cursor:pointer; }
+  .bdg:hover { filter:brightness(.95); }
+  .b-s { background:#EAF2FF; color:#2B6CB8; border:1px solid #C4DAF5; }
+  .b-c { background:#FDEFE7; color:#E24A10; border:1px solid #F5CBB5; }
+  .sec-t { font-size:12px; color:#6E7885; margin:2px 0 6px; font-weight:700; letter-spacing:.5px; }
+  .svwrap { display:grid; grid-template-columns:repeat(auto-fit, minmax(430px, 1fr)); gap:10px; margin-bottom:12px; }
+  .sv { border:1px solid #E4E9EE; border-left:3px solid #2B6CB8; border-radius:7px; padding:8px 12px 9px; }
+  .sv.c { border-left-color:#FF4B16; }
+  .sv-h { display:flex; gap:8px; align-items:center; margin-bottom:4px; font-size:13.2px; flex-wrap:wrap; }
+  .sv-h .more { margin-left:auto; font-size:11px; font-weight:700; color:#E24A10; cursor:pointer; }
+  .sv-story { font-size:11.8px; color:#5C6672; line-height:1.52; margin-bottom:5px; }
+  .sv-how { font-size:12.3px; line-height:1.5; }
+  .sv-how b { color:#E24A10; }
+  .p-grid { display:grid; grid-template-columns:1fr 1.25fr 1fr; gap:14px; margin-bottom:4px; }
+  .p-col h5 { font-size:12px; color:#6E7885; margin-bottom:6px; }
+  .p-col .txt { font-size:12.8px; line-height:1.58; }
+  .p-col ul { list-style:none; }
+  .p-col li { font-size:12.6px; line-height:1.52; padding-left:14px; position:relative; margin-bottom:4px; }
+  .p-col li::before { content:"▪"; color:#FF4B16; position:absolute; left:0; }
+  .ba { margin-top:10px; border-top:1px dashed #E0E4E9; padding-top:10px; }
+  .ba table { width:100%; border-collapse:collapse; font-size:12.4px; }
+  .ba th { text-align:left; color:#6E7885; font-size:11.5px; padding:5px 8px; border-bottom:1px solid #EEF0F3; }
+  .ba td { padding:6px 8px; border-bottom:1px solid #F3F5F7; vertical-align:top; }
+  .ba td.dim { font-weight:800; color:#44546A; white-space:nowrap; }
+  .ba td.bf { color:#8A94A0; }
+  .ba td.af { color:#E24A10; font-weight:700; }
+
+  /* ---------- 前后对比 ---------- */
+  .cmp-title { font-size:18px; font-weight:800; margin:26px 0 4px; }
+  .cmp-title small { font-size:12.5px; color:#6E7885; font-weight:400; margin-left:10px; }
+  .cmp { display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; width:1360px; margin-top:12px; }
+  .cc { padding:14px 16px; }
+  .cc h4 { font-size:15px; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .cc h4 i { font-style:normal; width:26px; height:26px; border-radius:6px; background:#FF4B16; color:#fff; font-size:14px; display:flex; align-items:center; justify-content:center; }
+  .cc .bf, .cc .af { border-radius:8px; padding:9px 12px; font-size:12.4px; line-height:1.55; }
+  .cc .bf { background:#F3F5F8; color:#6E7885; margin-bottom:8px; }
+  .cc .bf b { color:#8A94A0; }
+  .cc .af { background:#FDEFE7; border:1px solid #F5CBB5; color:#27313D; }
+  .cc .af b { color:#E24A10; }
+  .cc .arr { text-align:center; color:#FF4B16; font-weight:800; font-size:14px; margin:2px 0 6px; }
+  .note { font-size:11.5px; color:#9AA3AE; margin-top:14px; width:1360px; }
+
+  /* ---------- 弹窗 ---------- */
+  .mask { display:none; position:fixed; inset:0; background:rgba(24,31,42,.46); z-index:99; }
+  .mask.show { display:flex; justify-content:center; align-items:flex-start; }
+  .modal { background:#fff; border-radius:12px; width:920px; max-width:94vw; margin-top:5vh; max-height:86vh; overflow-y:auto; padding:22px 28px 24px; box-shadow:0 12px 40px rgba(0,0,0,.25); }
+  .m-close { float:right; font-size:13px; font-weight:700; color:#6E7885; border:1px solid #D8DDE4; border-radius:14px; padding:3px 12px; cursor:pointer; background:#fff; }
+  .m-close:hover { color:#E24A10; border-color:#FF4B16; }
+  .m-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .m-title { font-size:18px; font-weight:800; }
+  .m-sec { border:1px solid #E4E9EE; border-radius:9px; padding:12px 16px 13px; margin-bottom:12px; }
+  .m-sec.sol { border:1.5px solid #F5CBB5; background:#FFFAF6; }
+  .m-sec h4 { font-size:13.5px; margin-bottom:8px; }
+  .m-sec.prob h4 { color:#44546A; }
+  .m-sec.sol h4 { color:#E24A10; }
+  .m-lab { display:inline-block; font-size:11.5px; font-weight:800; color:#44546A; background:#F0F2F6; border-radius:4px; padding:1px 8px; margin-right:6px; flex:none; }
+  .m-row { display:flex; margin-bottom:7px; font-size:12.8px; line-height:1.6; }
+  .m-row:last-child { margin-bottom:0; }
+  .m-row .t { flex:1; }
+  .m-row ul { list-style:none; margin-top:3px; }
+  .m-row li { padding-left:15px; position:relative; margin-bottom:3px; color:#3D4754; }
+  .m-row li::before { content:"▪"; color:#8A94A0; position:absolute; left:0; }
+  .m-sec.sol .m-lab { color:#E24A10; background:#FDEFE7; }
+  .m-sec.sol li::before { color:#FF4B16; }
+</style>
+</head>
+<body>
+
+<h1>属性抽取 · 场景融合交互图 <small>点击场景卡或流程环节，查看完整场景与针对性解决方案</small></h1>
+
+<h2>业务场景与用户痛点 <small>点击卡片查看完整场景与解决方案</small></h2>
+<div class="whycards">
+  <div class="wc scn" data-ref="S1">
+    <div class="row1"><span class="chip-s s">场景一</span><span class="name">采购筛不到货</span><span class="kw">隐身</span></div>
+    <div class="story">采购员老周接了个维修急件，要在商城找 DN65 的阀门。供应商确实推了规格信息，但「DN65」「dn65」「直径65」各写各的——按规格筛选时，一半商品根本筛不出来，货明明在商城里，就是看不见。</div>
+    <span class="more">完整场景与解决方案 ↗</span>
+  </div>
+  <div class="wc scn" data-ref="S2">
+    <div class="row1"><span class="chip-s s">场景二</span><span class="name">上架不敢全信</span><span class="kw">不可信</span></div>
+    <div class="story">运营小李负责把供应商系统推来的商品放行上架。推来的数据质量参差——有的属性齐全，有的缺一半，偶有错填；全盘入库，脏数据就混进筛选体系，错一条就是采购事故。</div>
+    <span class="more">完整场景与解决方案 ↗</span>
+  </div>
+  <div class="wc scn" data-ref="S3">
+    <div class="row1"><span class="chip-s s">场景三</span><span class="name">同款无法归并</span><span class="kw">不归一</span></div>
+    <div class="story">采购做季度供应商谈判，要拿「304 不锈钢保温杯 500ml」的横向报价单去压价。A 写「五百毫升」、B 写「500ML」、C 写「大容量」——系统认不出这是同一规格，比价单拉不出来。</div>
+    <span class="more">完整场景与解决方案 ↗</span>
+  </div>
+  <div class="wc con" data-ref="C1">
+    <div class="row1"><span class="chip-s c">约束一</span><span class="name">AI 按次收费——不能全量用</span><span class="kw">钱</span></div>
+    <div class="story">大模型按调用次数计费，真金白银。约 19 万商品若全部交给 AI 处理，是最贵的路线——而供应商已经把大部分属性信息推过来了，字段已在手还全靠 AI，等于花冤枉钱。</div>
+    <span class="more">完整约束与解决方案 ↗</span>
+  </div>
+  <div class="wc con" data-ref="C2">
+    <div class="row1"><span class="chip-s c">约束二</span><span class="name">属性模板买不到——只能自建</span><span class="kw">买不到</span></div>
+    <div class="story">「哪个类目该有哪些属性、值长什么样」的模板，是标杆平台的核心商业机密——京东明确拒绝提供，震坤行只给了一部分。外购这条路走不通。</div>
+    <span class="more">完整约束与解决方案 ↗</span>
+  </div>
+</div>
+
+<h2>场景融合使用流程 <small>实线橙＝业务主流程 ｜ 橙虚线＝反哺 · 兜底 ｜ 点击任一环节查看它解决的场景与解法</small></h2>
+
+<div class="card flow" id="flow">
+  <div class="lane" style="top:14px; height:98px;"></div>
+  <div class="lane" style="top:118px; height:98px;"></div>
+  <div class="lane" style="top:220px; height:104px;"></div>
+  <div class="lane" style="top:330px; height:130px;"></div>
+  <div class="lane-label" style="top:52px;">供应商系统</div>
+  <div class="lane-label" style="top:156px;">商品中台<br>流水线</div>
+  <div class="lane-label" style="top:260px;">AI 抽取 · 校验</div>
+  <div class="lane-label" style="top:384px;">运营人审</div>
+
+  <svg class="arrows" viewBox="0 0 1360 560">
+    <defs>
+      <marker id="ao" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#FF4B16"/></marker>
+      <marker id="ag" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9AA3AE"/></marker>
+    </defs>
+    <line x1="235" y1="96" x2="330" y2="130" stroke="#FF4B16" stroke-width="2" marker-end="url(#ao)"/>
+    <line x1="385" y1="196" x2="505" y2="228" stroke="#FF4B16" stroke-width="2" marker-end="url(#ao)"/>
+    <line x1="655" y1="272" x2="678" y2="272" stroke="#FF4B16" stroke-width="2" marker-end="url(#ao)"/>
+    <line x1="838" y1="272" x2="858" y2="272" stroke="#FF4B16" stroke-width="2" marker-end="url(#ao)"/>
+    <line x1="1018" y1="272" x2="1042" y2="272" stroke="#FF4B16" stroke-width="2" marker-end="url(#ao)"/>
+    <line x1="1085" y1="300" x2="1085" y2="452" stroke="#FF4B16" stroke-width="2" marker-end="url(#ao)"/>
+    <line x1="1032" y1="296" x2="975" y2="348" stroke="#9AA3AE" stroke-width="1.6" stroke-dasharray="5,4" marker-end="url(#ag)"/>
+    <line x1="940" y1="412" x2="940" y2="450" stroke="#FF4B16" stroke-width="2" marker-end="url(#ao)"/>
+    <path d="M855,382 L836,382 L836,432 L385,432 L385,200" fill="none" stroke="#FF4B16" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#ao)"/>
+  </svg>
+
+  <div class="lab" style="left:1092px; top:368px;">是</div>
+  <div class="lab g" style="left:995px; top:312px;">否</div>
+  <div class="lab" style="left:520px; top:408px;">确认结果反哺模板（模板自己长）</div>
+
+  <div class="node" data-id="n1" style="left:130px; top:26px; width:150px;">
+    <div class="tt"><span class="no">01</span>供应商推品</div>
+    <div class="st">标题＋属性＋规格字段<br>（API 推送，字段已在手）</div>
+  </div>
+  <div class="node" data-id="n2" style="left:300px; top:130px; width:160px;">
+    <div class="tt"><span class="no">02</span>挂标准类目</div>
+    <div class="st">预测四级类目 → 选定该类目<br>属性模板（出题依据）</div><span class="aip">AIP-003/004</span>
+  </div>
+  <div class="node hl" data-id="n3" style="left:480px; top:224px; width:175px;">
+    <div class="tt"><span class="no">03</span>三路分层调度</div>
+    <div class="st">直采（零成本）→ 词典归一（零成本）<br>→ AI 兜底真缺口（按需付费）</div><span class="aip">AIP-012</span>
+  </div>
+  <div class="node" data-id="n4" style="left:680px; top:230px; width:158px;">
+    <div class="tt"><span class="no">04</span>Schema 约束抽取</div>
+    <div class="st">出题在模板内 · 出圈即丢弃留痕 · 值钳制</div>
+  </div>
+  <div class="node" data-id="n5" style="left:860px; top:230px; width:158px;">
+    <div class="tt"><span class="no">05</span>合理性检测</div>
+    <div class="st">必填 / 值域 / 错填拦截<br>（DN80 混不进 DN65）</div><span class="aip">AIP-013</span>
+  </div>
+  <div class="node diamond" data-id="nx" style="left:1042px; top:238px; width:88px; height:58px;">
+    <div class="tt" style="justify-content:center; font-size:12.5px;">校验通过？</div>
+  </div>
+  <div class="node dash" data-id="n6" style="left:860px; top:352px; width:158px;">
+    <div class="tt"><span class="no">06</span>人审 · 驳回回传</div>
+    <div class="st">低置信转人审 · 驳回原因回传供应商</div>
+  </div>
+  <div class="bar" data-id="n8" style="left:130px; top:452px; width:1000px;">
+    <div class="tt"><span class="no" style="position:absolute; left:8px; top:8px;">08</span><b>标准属性入库 → 前台消费（采购人）</b>：SPU→同款簇可比价（AIP-010）· SKU→筛选索引可筛选（AIP-018-020）· SEO 标题可搜索（AIP-011）——「DN65 阀门」一筛即中</div>
+  </div>
+  <div class="loopchip" data-id="n9" style="left:410px; top:340px;">↺ 反哺回环 · 模板生长</div>
+  <div class="datasup" style="top:528px;"><b>数据支撑</b>｜类目树 6,495 叶 · Schema 模板库 → 步骤02　／　标准字典 8,240 属性 · 74,820 枚举 · 品牌归一 13,128 → 步骤03　／　ES 同款簇 · 筛选索引 → 步骤08</div>
+</div>
+
+<div class="card panel show" id="panel"></div>
+
+<div class="cmp-title">使用 AI 前后对比 <small>对比为方向性示意，数字基线待评测集锁定</small></div>
+<div class="cmp">
+  <div class="card cc">
+    <h4><i>人</i>人力</h4>
+    <div class="bf"><b>AI 前</b>：每天上百条推品逐条人工核对；采购筛不到货靠问客服、翻协调员——找货能力沉淀在个人身上</div>
+    <div class="arr">↓</div>
+    <div class="af"><b>AI 后</b>：机器处理确定性主干，人只处理例外（低置信＋校验未过）；协调员的线下货源表不再必要</div>
+  </div>
+  <div class="card cc">
+    <h4><i>¥</i>金钱</h4>
+    <div class="bf"><b>AI 前</b>：19 万商品全量 AI 调用＝最贵路线——字段已在手还全靠 AI，等于花冤枉钱</div>
+    <div class="arr">↓</div>
+    <div class="af"><b>AI 后</b>：三路分层，AI 只买真缺口（触发率≈10% 示意）——供应商覆盖越好，账单越小</div>
+  </div>
+  <div class="card cc">
+    <h4><i>⏱</i>时间</h4>
+    <div class="bf"><b>AI 前</b>：一单询价从几分钟拖成半天；上架核对速度跟不上推送速度，只能「先上再说」</div>
+    <div class="arr">↓</div>
+    <div class="af"><b>AI 后</b>：属性筛选一筛即中、同款比价即拉即得；推品当日分层、当日放行</div>
+  </div>
+  <div class="card cc">
+    <h4><i>库</i>数据</h4>
+    <div class="bf"><b>AI 前</b>：规格写法各异、同款认不出、模板买不到——数据沉不成资产，比价能力随人流失</div>
+    <div class="arr">↓</div>
+    <div class="af"><b>AI 后</b>：标准属性、同款簇、自生长模板成为平台资产——越用越厚，不受制于任何平台</div>
+  </div>
+</div>
+<div class="note">口径说明：页内百分比/条数为示意值；正式基线在评测集建好后锁定（对齐 SOW 表 13 验收指标：关键属性≥85% / 普通≥75% / 类目首选≥80% / 同款 P≥85%）。</div>
+
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+
+<script>
+const REL = {
+  S1: { n:"场景一 · 筛得到", cls:"b-s", c:"", full:"采购筛不到货【隐身】", kw:"隐身",
+    short:"老周要在商城找 DN65 阀门——「DN65」「dn65」「直径65」各写各的，一半商品筛不出来",
+    who:"采购员老周接了个维修急件，要在商城找 DN65 的阀门。",
+    stuck:"供应商确实推了规格信息，但写法五花八门——「DN65」「dn65」「直径65」各写各的。按规格筛选时，一半商品根本筛不出来。货明明在商城里，就是看不见。",
+    consq:["老周筛不到，只能在线问客服、打电话找采购协调员帮忙翻——一单询价从几分钟拖成半天",
+           "急件等不起，老周转身打开京东工业、震坤行直接下单——交易绕开自有商城，GMV 当场流失，还把采购习惯送给了外部平台",
+           "采购协调员被迫维护自己的线下货源表，找货能力沉淀在个人身上，人一换就断档"],
+    sol: {
+      who:"老周还是搜「DN65 阀门」，但字段已由流水线标准化：「直径65」「dn65」统一归一成 DN65 入筛选索引（AIP-012），前台自动聚合出通径/压力/材质筛选面板（AIP-018-020），同款直接拉横向报价（AIP-010）。",
+      stuck:"写法归一成标准值 → 属性入筛选索引 → 筛选面板按类目逐层收窄——货从「隐身」变「一筛即中」。",
+      eff:["不再问客服、翻协调员——筛选即找货，询价回到几分钟",
+           "急件在商城内闭环——GMV 与采购习惯留在自有商城",
+           "找货能力从个人货源表沉淀进系统，人换了不断档"] } },
+  S2: { n:"场景二 · 敢放行", cls:"b-s", c:"", full:"上架不敢全信【不可信】", kw:"不可信",
+    short:"小李放行供应商推品——属性缺一半、偶有错填；全盘入库，脏数据混进筛选体系",
+    who:"运营小李负责把供应商系统推来的商品放行上架。",
+    stuck:"推来的数据质量参差——有的商品属性齐全，有的缺一半；偶有错填（规格填进型号格、单位写错）。全盘入库，脏数据就混进筛选体系。",
+    consq:["若不校验直接放：客户按「DN65」筛出来的结果里混着 DN80——下单买错、工地装不上，退换货来回一周，还可能升级成供应商纠纷。工业品规格错一个就是采购事故",
+           "若不敢信逐条人工核：每天上百条新品，核对速度跟不上推送速度——供应商铺货意愿下降，商城 SKU 增长失速",
+           "两头堵的结局：运营只能「先上再说」，质量欠账越滚越大，商城筛选器的公信力被持续稀释——筛错的商品多几次，采购就再也不用这个筛选器了"],
+    sol: {
+      who:"小李不再逐条核——推品自动走三路分层，机器按类目模板校验必填/值域/错填（AIP-013），通过的自动放行。",
+      stuck:"校验不合法即拦截（DN80 混不进 DN65）；低置信自动转人审——人只看机器没把握的少数件；驳回原因自动回传供应商，下次推对。",
+      eff:["脏数据进不了筛选体系——不再买错、不再退换一周、不再升级纠纷",
+           "核对速度跟上推送——当日分层当日放行，供应商铺货意愿不受挫",
+           "放行有统一判据（类目模板）——筛选器公信力不再被稀释"] } },
+  S3: { n:"场景三 · 比得了", cls:"b-s", c:"", full:"同款无法归并【不归一】", kw:"不归一",
+    short:"采购要拉「304 保温杯 500ml」横向报价单——「五百毫升」「500ML」「大容量」认不出同款",
+    who:"采购做季度供应商谈判，要拿「304 不锈钢保温杯 500ml」的横向报价单去压价。",
+    stuck:"A 供应商写「五百毫升」、B 写「500ML」、C 写「大容量」——系统认不出这是同一规格，比价单拉不出来。",
+    consq:["采购只能人工逐条对标题、凭经验认同款——比价覆盖不全，谈判桌上拿不出数据，议价靠感觉",
+           "同款被拆散在多家供应商重复采购——订单分散、量不集中，阶梯价永远谈不下来",
+           "长期看，商城沉淀不出品类行情（价格带、同款价差），比价能力留在个人脑子里，人走了能力就带走了"],
+    sol: {
+      who:"采购在谈判前直接在前台点「同款比价」——系统按 SPU 属性（品牌＋型号＋关键规格）把同款归成一簇（AIP-010）。",
+      stuck:"写法先归一成标准规格 → SPU 属性一致即同一标准品 → 横向报价单自动拉出，按报价升序。",
+      eff:["比价全覆盖、数据上桌——议价不再靠感觉",
+           "同款集中采购——量集中，阶梯价谈得下来",
+           "品类行情（价格带、同款价差）持续沉淀——比价能力留在系统里"] } },
+  C1: { n:"约束一 · 钱", cls:"b-c", c:"c", full:"AI 按次收费【不能全量用】", kw:"钱",
+    short:"19 万商品全交 AI 是最贵路线——字段已在手还全靠 AI，等于花冤枉钱",
+    reality:"大模型按调用次数计费，真金白银。约 19 万商品若全部交给 AI 处理，是最贵的路线——而供应商已经把大部分属性信息推过来了，字段已在手还全靠 AI，等于花冤枉钱。",
+    decision:"三路分层——供应商推的直采（零成本）→ 写法不统一的词典归一（零成本）→ AI 只兜底真缺口（按需付费）。AI 调用量＝缺口数，供应商覆盖越好，账单越小。",
+    land:"落地在环节 03「三路分层调度」（AIP-012）：AI 触发率≈10%（示意）——账单随供应商覆盖面缩小。" },
+  C2: { n:"约束二 · 买不到", cls:"b-c", c:"c", full:"属性模板买不到【只能自建】", kw:"买不到",
+    short:"模板是标杆平台核心机密——京东明确拒绝提供，震坤行只给一部分，外购走不通",
+    reality:"「哪个类目该有哪些属性、值长什么样」的模板，是标杆平台的核心商业机密——京东明确拒绝提供，震坤行只给了一部分。外购这条路走不通。",
+    decision:"三源合流自建——从供应商推送的商品数据里反向自举（主力，数据在我们手里）＋ Shopify 公开挂载表（消费类快启）＋ 震坤行给的种子（校验基准）；AI 补出的属性经确认后反哺模板——模板随经营自然生长，不受制于任何平台。",
+    land:"落地在环节 02「挂类目选模板」＋ ↺「反哺回环」（AIP-005/006）：自举曾产出 694 叶/1,182 行模板，Shopify 9.3 万条已入库。" },
+};
+const NODES = {
+  n1: { t:"01 供应商推品", aip:"—（起点环节）", solve:[
+      { r:"C1", how:"供应商推什么先用什么——能直接映射的字段不花 AI 的钱；AI 只留给真缺口" },
+      { r:"S1", how:"起点：字段推来了但「不成标准」，这是三个场景共同的病根，交给后续环节治" } ],
+    ai:"这个环节故意<b>不用 AI</b>——供应商已经把标题＋属性＋规格字段推过来了，这正是「字段已在手」的现实。",
+    how:["API 推送商品数据包（标题＋属性＋规格）","原样进入分层流水线，先判断字段可用性"],
+    shine:["零成本起点：能用多少先用多少，AI 不为已有的字段花钱"],
+    ba:[["设计","字段在手却被忽略：全靠人工核对，或全量交给 AI","字段先用：三路分层，缺口才轮到 AI"]] },
+  n2: { t:"02 挂标准类目 · 选模板", aip:"AIP-003/004 类目治理", solve:[
+      { r:"S1", how:"把推品自动挂到标准四级类目——老周才有「阀门>球阀」这个筛选入口；挂错类目＝用错模板＝筛选入口全错" },
+      { r:"S2", how:"类目挂对了，后续校验才有正确的「验收单」（每叶类目一张属性模板）" },
+      { r:"C2", how:"类目树是模板的挂载点——买不到的模板就长在自己的类目上" } ],
+    ai:"AI 做<b>类目预测</b>：把推品自动挂到标准四级类目（预测准确率实测约 80%，错了可人工修正后回流），挂对类目才能套对那张属性模板。",
+    how:["推品标题 → 类目预测 → 挂到 6,495 叶标准类目之一","按类目取出该类目的属性 Schema，作为后续出题与验收依据"],
+    shine:["这一步是整条链的地基：入口错了，后面抽取、校验、筛选全部白做"],
+    ba:[["准确率","人工挑类目，靠经验、经常挂错","自动挂载约 80%，错了可人工修正后回流"]] },
+  n3: { t:"03 三路分层调度（核心）", aip:"AIP-012 属性自动提取", solve:[
+      { r:"C1", how:"三路分层：直采（零成本）→ 词典归一（零成本）→ AI 只兜真缺口（按需付费）——AI 调用量＝缺口数，供应商覆盖越好账单越小" },
+      { r:"S1", how:"写法不统一的走词典归一（「直径65」→DN65），缺口才 AI 补——字段从「有」变「标准」，才进得了老周的筛选面板" },
+      { r:"S3", how:"规格全部归一成标准值之后，同款才有归并的键——比价单才拉得出来" } ],
+    ai:"AI 只在第三路出手：<b>读标题抽取结构化属性</b>（Schema 约束＋幻觉过滤＋值钳制）。第一、二路零 AI 成本。",
+    how:["①直采：字段存在且合法 → 直接映射入库（零成本）","②归一：写法不统一 → 词典校正「五百毫升→500ml」（零成本）","③AI 兜底：字段缺失/校验不过 → AI 读标题补抽（按需付费）"],
+    shine:["「确定性主干，AI 只在缺口出手」——同时回答约束一（钱）与场景一（筛得到）","AI 触发率≈10%（示意），账单随供应商覆盖面缩小"],
+    ba:[["金钱","19 万商品全量调用，最贵路线","只调缺口≈10%（示意），账单随覆盖面缩小"],
+        ["数据","「直径65」「dn65」各写各的，筛不出","全部归一成 DN65，进得了筛选索引"],
+        ["人力","逐条判断字段能不能用","路由全自动，人只看拦下的例外"]] },
+  n4: { t:"04 Schema 约束抽取", aip:"AIP-012（抽取内核）", solve:[
+      { r:"C2", how:"买不到的模板自己建、自己长——AI 的出题范围就是这张自建 Schema" },
+      { r:"S2", how:"出圈即丢弃留痕、值钳制到合法域——AI 输出的就是标准值，运营才敢直接放行入库" } ],
+    ai:"大模型按类目模板<b>结构化抽取</b>键值对——输出严格限制在 Schema 内，出圈的键一律丢弃并留痕，数值/枚举钳制到合法域。",
+    how:["以该类目 Schema 为约束，LLM 从标题/描述抽属性","Schema 外输出 → dropped_keys 留痕（幻觉可追溯）","数值/枚举 → 钳制到模板定义的值域"],
+    shine:["AI 有自由、有边界：既吃得上大模型的理解力，又不放任幻觉进库"],
+    ba:[["可信度","抽出的属性五花八门，不敢直接用","输出即标准值，敢直接入筛选体系"],
+        ["追溯","错了不知道错在哪一步","丢弃留痕，幻觉模式可复盘"]] },
+  n5: { t:"05 合理性检测", aip:"AIP-013 属性合理性检测", solve:[
+      { r:"S2", how:"对照模板校验必填/值域/错填：DN80 混不进 DN65 结果、规格填进型号格被拦——不合法不放行，驳回原因回传供应商，不再「先上再说」" } ],
+    ai:"这一步<b>不用大模型，用规则引擎</b>——必填齐不齐、值域对不对、单位错没错，确定性判断，该省的钱不花。",
+    how:["对照模板必填项：缺必填 → 拦截","值域校验：DN80 填进 DN65 商品 → 拦截","单位/类型错配（规格填进型号格）→ 拦截并标注"],
+    shine:["筛错的代价大于筛不到——这道闸保住筛选器公信力，工业品规格错一个就是采购事故"],
+    ba:[["风险","不校验直接放：买错、退换货一周、供应商纠纷","脏数据进不了筛选体系"],
+        ["人力","逐条人工核，跟不上推送速度","机器拦截，人只看拦下的几条"]] },
+  nx: { t:"校验通过？（分支规则）", aip:"—（确定性路由）", solve:[
+      { r:"S2", how:"放不放行有统一判据（模板）：通过即放、不通过转人审——把小李从「全放怕事故 / 逐条核跟不上」的两头堵里解出来" } ],
+    ai:"确定性路由：<b>通过即放行，不通过进人审</b>——不消耗大模型，毫秒级判断。",
+    how:["是 → 标准属性入库，进入前台消费","否 → 转人审确认；必填缺失且补不出的 → 驳回回传供应商"],
+    shine:["放不放行不再凭运营个人经验，判据就是那张类目模板"],
+    ba:[["时间","「先上再说」与「逐条卡死」两头堵","当日分层、当日放行，例外才转人审"]] },
+  n6: { t:"06 人审 · 驳回回传", aip:"人审工作台", solve:[
+      { r:"S2", how:"低置信自动转人审——人只看机器没把握的少数件；驳回原因自动生成、直达供应商，下次推对——质量一起变好" } ],
+    ai:"AI 产出全部<b>带置信度</b>：低置信（示例阈值 0.8 以下）自动转人审；驳回时原因自动生成，回传供应商。",
+    how:["低置信/校验不过 → 人审工作台：原始字段 vs 标准属性对照确认","确认入库 → 结果计入模板统计（反哺）","驳回 → 原因直达供应商，下次推对"],
+    shine:["人从「全量核对」变「例外处理」；驳回不结案、要回流——供应商数据质量一起变好"],
+    ba:[["人力","128 条/日逐条核（示意）","只处理约 10 条例外（示意）"],
+        ["质量","驳回原因靠运营手写","原因自动生成、直达供应商"]] },
+  n8: { t:"08 入库 → 前台消费", aip:"AIP-010 / 018-020 / 011", solve:[
+      { r:"S1", how:"标准属性入筛选索引（AIP-018-020）＋按属性生成标准标题（AIP-011）——老周搜「DN65 阀门」一筛即中，不再绕客服和外部平台" },
+      { r:"S3", how:"SPU 属性一致即归入同款簇（AIP-010）——3 家报价一张表，议价有据、量可集中、阶梯价谈得下来" } ],
+    ai:"AI 在消费端做三件事：<b>SPU 同款归并</b>、<b>属性聚合筛选面板</b>、<b>SEO 标题生成</b>——场景一和场景三在同一个前台页闭环。",
+    how:["SPU 属性一致 → 归入同款簇，前台「同款比价」横向拉单","标准属性入筛选索引 → 通径/压力/材质面板逐层收窄","按属性生成标准标题 →「DN65 阀门」直接命中"],
+    shine:["老周筛得到（场景一）、比价拉得出（场景三）——GMV 不再绕开自有商城"],
+    ba:[["时间","一单询价半天（问客服、翻协调员）","筛选＋比价几分钟内完成"],
+        ["数据","同款拆散多家，比价单拉不出","同款簇沉淀品类行情，议价有据"]] },
+  n9: { t:"↺ 反哺回环 · 模板生长", aip:"AIP-005/006 属性治理", solve:[
+      { r:"C2", how:"模板买不到就从自己数据里长：AI 补出的属性经运营确认后自动计入统计，高频键自动成为模板候选——人审采纳、灰度生效，不受制于京东/震坤行" } ],
+    ai:"AI 从标题补出的属性，经运营确认后<b>自动计入该类目的属性统计</b>——高频出现的键自动成为模板候选。",
+    how:["三路分层结果 → 填充率统计","高频属性 → 模板候选 → 人工审核 → 灰度生效","今天的 AI 补抽，就是明天该类目模板的一部分"],
+    shine:["三源合流自建（自举主力＋Shopify 9.3 万＋震坤行种子，曾自举 694 叶/1,182 行）——模板随经营自然生长"],
+    ba:[["资产","外购走不通：京东拒给、震坤行只给部分","三源合流自建，越用越全"],
+        ["演进","模板一旦缺口只能等人补","随经营自然生长，AI 补抽持续反哺"]] },
+};
+const panel = document.getElementById("panel");
+const mask = document.getElementById("mask");
+const modal = document.getElementById("modal");
+
+function openModal(ref){
+  const R = REL[ref];
+  let html = "";
+  if (ref.startsWith("S")) {
+    html = `
+      <div class="m-head"><button class="m-close" onclick="closeModal()">关闭 ✕</button><span class="chip-s s">${R.n.split(" · ")[0]}</span><span class="m-title">${R.full}</span></div>
+      <div class="m-sec prob"><h4>■ 场景：问题是怎么产生的</h4>
+        <div class="m-row"><span class="m-lab">谁在做什么</span><span class="t">${R.who}</span></div>
+        <div class="m-row"><span class="m-lab">卡在哪</span><span class="t">${R.stuck}</span></div>
+        <div class="m-row"><span class="m-lab">业务实操后果</span><span class="t"><ul>${R.consq.map(c=>`<li>${c}</li>`).join("")}</ul></span></div>
+      </div>
+      <div class="m-sec sol"><h4>■ 解决方案</h4>
+        <div class="m-row"><span class="m-lab">现在谁在做什么</span><span class="t">${R.sol.who}</span></div>
+        <div class="m-row"><span class="m-lab">顺在哪</span><span class="t">${R.sol.stuck}</span></div>
+        <div class="m-row"><span class="m-lab">业务实操效果</span><span class="t"><ul>${R.sol.eff.map(c=>`<li>${c}</li>`).join("")}</ul></span></div>
+      </div>`;
+  } else {
+    html = `
+      <div class="m-head"><button class="m-close" onclick="closeModal()">关闭 ✕</button><span class="chip-s c">${R.n.split(" · ")[0]}</span><span class="m-title">${R.full}</span></div>
+      <div class="m-sec prob"><h4>■ 约束：绕不开的现实</h4>
+        <div class="m-row"><span class="m-lab">现实</span><span class="t">${R.reality}</span></div>
+        <div class="m-row"><span class="m-lab">对应产品决策</span><span class="t">${R.decision}</span></div>
+      </div>
+      <div class="m-sec sol"><h4>■ 解决方案 · 在流程中的落地</h4>
+        <div class="m-row"><span class="m-lab">落地环节</span><span class="t">${R.land}</span></div>
+      </div>`;
+  }
+  modal.innerHTML = html;
+  mask.classList.add("show");
+}
+function closeModal(){ mask.classList.remove("show"); }
+mask.addEventListener("click", e => { if (e.target === mask) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+function render(id){
+  const n = NODES[id];
+  panel.innerHTML = `
+    <div class="p-head">
+      <div class="p-title">${n.t}</div><span class="p-aip">${n.aip}</span>
+      ${n.solve.map(s=>`<span class="bdg ${REL[s.r].cls}" data-ref="${s.r}" title="点击查看完整场景与解决方案">${REL[s.r].n}</span>`).join("")}
+    </div>
+    <div class="sec-t">■ 解决的场景 / 约束（点徽章看完整场景）</div>
+    <div class="svwrap">
+      ${n.solve.map(s=>{const R=REL[s.r];return `
+        <div class="sv ${R.c}">
+          <div class="sv-h"><span class="bdg ${R.cls}" data-ref="${s.r}">${R.n}</span><b>${R.full}</b><span class="more" data-ref="${s.r}">完整场景与解决方案 ↗</span></div>
+          <div class="sv-story">${R.short}</div>
+          <div class="sv-how"><b>→ 本环节针对性解法：</b>${s.how}</div>
+        </div>`;}).join("")}
+    </div>
+    <div class="p-grid">
+      <div class="p-col"><h5>AI 做了什么</h5><div class="txt">${n.ai}</div></div>
+      <div class="p-col"><h5>怎么解决（业务流程）</h5><ul>${n.how.map(h=>`<li>${h}</li>`).join("")}</ul></div>
+      <div class="p-col"><h5>亮点 · 价值</h5><ul>${n.shine.map(s=>`<li>${s}</li>`).join("")}</ul></div>
+    </div>
+    <div class="ba"><table><tr><th style="width:70px;">维度</th><th style="width:47%;">使用 AI 前</th><th>使用 AI 后</th></tr>
+      ${n.ba.map(r=>`<tr><td class="dim">${r[0]}</td><td class="bf">${r[1]}</td><td class="af">${r[2]}</td></tr>`).join("")}
+    </table></div>`;
+  panel.classList.add("show");
+  document.querySelectorAll(".node,.bar,.loopchip").forEach(el=>el.classList.toggle("sel", el.dataset.id===id));
+  panel.querySelectorAll("[data-ref]").forEach(el=>el.addEventListener("click", ev=>{ ev.stopPropagation(); openModal(el.dataset.ref); }));
+}
+document.querySelectorAll(".node,.bar,.loopchip").forEach(el=>{
+  el.addEventListener("click", ()=>render(el.dataset.id));
+});
+document.querySelectorAll(".wc").forEach(el=>el.addEventListener("click", ()=>openModal(el.dataset.ref)));
+render("n3");
+</script>
+</body>
+</html>
