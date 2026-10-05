@@ -1,12 +1,12 @@
 import type { ScenarioConfig } from "../schema/scenario";
 
 /** 页面级前后对比（人力/金钱/时间/数据）+ 口径说明（红线5） */
-export function CompareSection({ cfg }: { cfg: ScenarioConfig }) {
+export function CompareSection({ cfg, no }: { cfg: ScenarioConfig; no: string }) {
   return (
     <>
-      <div className="cmp-title">
-        使用 AI 前后对比<small>对比为方向性示意，数字基线待评测集锁定</small>
-      </div>
+      <h2 className="sec-h">
+        <em>{no}</em>使用 AI 前后对比<small>对比为方向性示意，数字基线待评测集锁定</small>
+      </h2>
       <div className="cmp">
         {cfg.compare.map((c) => (
           <div className="card cc" key={c.dim}>

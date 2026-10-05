@@ -102,6 +102,11 @@ export const flowNodeSchema = z.object({
   /** 详情面板 AIP 标注（缺省用 aip） */
   panelAip: z.string().optional(),
   kind: nodeKindSchema.default("normal"),
+  /**
+   * 所属泳道序号（= flow.lanes 的 0-based 索引，架构层归属的唯一事实源）。
+   * 仅 autoLayout 场景使用：构建期据此赋 partition，避免靠坐标推断导致不幂等。
+   */
+  laneIndex: z.number().int().min(0).optional(),
   x: z.number(),
   y: z.number(),
   w: z.number().positive(),
@@ -128,11 +133,13 @@ export const flowEdgeSchema = z.object({
   fromSide: z.enum(["left", "right", "top", "bottom"]).optional(),
   /** 入锚点 */
   toSide: z.enum(["left", "right", "top", "bottom"]).optional(),
-  /** 折线途经点（回环用），[[x,y],…]；缺省直线 */
+  /** 折线途经点（手工布局回环用），[[x,y],…]；缺省直线。autoLayout 场景由 route 取代 */
   via: z.array(z.tuple([z.number(), z.number()])).optional(),
+  /** 自动布局产物：完整正交折线点串（含起止点），由 scripts/auto-layout.ts 构建期回写 */
+  route: z.array(z.tuple([z.number(), z.number()])).optional(),
   /** 分支标签（是/否/说明） */
   label: z.string().optional(),
-  /** 标签位置；缺省放线中点 */
+  /** 标签位置；缺省放线中点。自动布局场景由构建脚本回写 */
   labelAt: z.tuple([z.number(), z.number()]).optional(),
 });
 
@@ -143,6 +150,18 @@ const flowSchema = z.object({
   lanes: z.array(laneSchema).min(1),
   nodes: z.array(flowNodeSchema).min(1),
   edges: z.array(flowEdgeSchema).default([]),
+  /**
+   * 自动布局标记：true 表示几何（节点坐标/泳道/边 route/标签）由
+   * scripts/auto-layout.ts 构建期用 ELK 重算回写；缺省 false 走手工坐标
+   */
+  autoLayout: z.boolean().optional(),
+  /**
+   * 总索引 + 分层下钻模式（合同蓝图类大图画布）：
+   * true 时由 BlueprintCanvas 渲染——L1 泳道索引行 + L2 泳道内部流程下钻
+   */
+  drill: z.boolean().optional(),
+  /** L1 主链阶段顺序（节点 id 数组，7 步以内）；仅 drill 模式使用 */
+  indexChain: z.array(z.string()).optional(),
   /** 数据支撑条（流程图底部一行） */
   dataSupport: z.string().optional(),
   /** 页面打开时默认选中的环节 id */
