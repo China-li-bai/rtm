@@ -1,5 +1,174 @@
 # worklog · scenario-demo-hub（场景演示平台）
 
+## 2026-10-08
+
+### 任务P：18% 错挂口径溯源 + 判例实例上墙
+- **输入**：用户问「四年下来类目错挂约 18% 是怎么来的？历史订单数据最好给出简单易懂的实例」
+- **溯源（事实链）**：18%＝scaffold 2026-08-28 商品挂载抽样实测——对约 18.9 万条原始挂载随机抽 600 条（seed=42，qwen3.7-plus），一遍中立提示词+检索 Top-5 举证（wrong 37% 过严）、二遍对 222 条 wrong 分级 → 明确错挂 108=18.0%（CI 15.1%~21.3%，宽松口径 81.5%），TCCC 分层交叉验证单调吻合（suspicious 31/31 错 / ok 层 10.6% / low_conf 47.6%）；¥1.22 亿＝历史订单 232,255 行 cat_level NULL（四年 ¥11.33 亿的 10.7%，集中 22-24）——**两个数字两个来源：18% 是挂载横断面、1.22 亿是订单累计**
+- **修正**：g01.legacy 原「四年下来类目错挂约 18%」把两事实缝成一句 → 拆开改写；S1 弹窗 consequences 换成真实判例（游泳池→办公文具 / 广场舞音响→电脑音箱 / RVV→铜电线应护套线 / 漏保→微型断路器 / 兜底叶 16,198 条 8.6%），effects 逐条对应补齐第 4 条（红线校验拦截 3≠4 后修正）；S1.card 加判例钩子；metricNote 补完整推导（n=600/seed/两遍判卷/CI/TCCC 交叉/232,255 行）；overall.metricNote 加「详见数据治理页」指引
+- **验证**：validate 7 份 0 警告 ✓ / rules.test 10/10 ✓ / build 593.28KB ✓；浏览器实测 S1 弹窗 4 判例、g01 抽屉新口径、页底推导全渲染（shots/data-gov-s1-examples.png）
+- **完成**：2026-10-08 CST
+
+
+## 2026-10-06（上午二段）
+
+### 任务O：canvas 外全站审查（首页/导航/三段叙事/抽屉/弹窗）
+- **输入**：用户「除了 canvas 的其余部分也需要审核」
+- **审查面**：HubHome 场景中心 ｜ 吸顶导航+scrollspy ｜ hero 标题 ｜ 01 痛点/约束卡（whycards）｜ 03 前后对比区（cmp 四卡+口径说明）｜ DetailPanel 抽屉 ｜ RefModal 弹窗 ｜ 交互链（点节点→抽屉→点徽章→弹窗→Esc→遮罩）
+- **DOM 实测全绿项**：首页 7 卡等宽同排底边全对齐、无内部裁切、可滚动（1440×900 scrollYMax=400）；场景卡 3 列/约束卡 2 列宽卡的有意混排、行内对齐、story 零截断；对比区四卡 371×265 完全等高、AI前/后零溢出；抽屉 560px 可滚、弹窗 z99 压抽屉 z91、遮罩点击关闭 ✓
+- **真 bug 2 个（已修）**：
+  1. **Esc 双层同关**：抽屉与 RefModal 各挂 document 级 keydown，同开时一次 Esc 两层全关，违背「单层关闭（仅最上层）」约定 → ScenarioPage 抽屉 handler 加 `if (modalRef) return;` 让位（deps 补 modalRef）；复测 both-open → Esc1 只关弹窗、Esc2 关抽屉 ✓
+  2. **useScale 高度收拢亚像素裁切**：`scrollHeight（取整）×scale` 丢亚像素，缩放后放大成 4px，页尾「口径说明」被切 → 改 `getBoundingClientRect().height × s` 再 `ceil+2`；复测 note 底边余 1px ✓
+- **误报裁决（视觉模型 3 条 vs DOM）**：首页「底部裁切+重复标题」→ scrollYMax=400 可滚、标题 innerText 仅 1 次，误报；「03 区不可见」→ fullPage 截图对 transform 页高度检测失灵（截图缺下半页），滚动定位+视口截图后四卡/说明完整；「箭头不居中」→ `.arr` 整宽块 text-align:center 字形居中，本人首版测量口径错（offsetParent 是网格容器）
+- **内容缺口（非 UI 缺陷，不本轮修）**：overall a1~a7 抽屉无 risks/metrics/fallback（七问只回填了 b01-b08+trace）——已在 state 下一步候选
+- **验证**：tsc ✓ / build 591.83KB ✓ / 交互链复测 ✓；截图留档 shots/{hubhome-audit, overall-compare-section, overall-drawer-b04, overall-refmodal}.png
+- **完成**：2026-10-06 上午 CST
+
+## 2026-10-06（上午）
+
+### 任务N：overall-flow 浏览器 UI 审查 → 修复 + 组件化抽象
+- **输入**：用户「使用浏览器审查 overall-flow 的 UI 布局/文案/模块间距与连线，算出合适边距，然后按组件化思维抽象」
+- **审查方式**：主代理浏览器内核（本机 Browser Use 约束禁子代理）DOM 实测 + 视觉模型交叉验证——两处分歧（小地图存在性/标签遮挡）均以 DOM 相交为硬事实裁决
+- **实测基线（修复前）**：节点零重叠、连线零穿框、文字零溢出、列距恒 40px——布局骨架本身健康；缺陷 4 处：
+  1. **小地图遮内容**：盖住 p3「评测平台·三注册表」右端与飞轮条尾（世界 1360×781 vs 视口 1338×820，整体可见时小地图纯冗余）
+  2. **「反哺」边标签压卡**：labelAt=[743,600] 与「同款归并」(758..875×519..609) 水平重叠 117px；根因=`labelAtForRoute` 回退分支（无 ≥标签宽水平段时取路线中点）**不做避障**，且 .lab 无底色、z3 与节点同级但 DOM 在前 → 被卡片盖住
+  3. **泳道药丸过高过窄**：max-width 100px 内塞标题+note，高 80~109px，底座药丸(109)比泳道本体(103)还高
+  4. **加载即整版灰化**：defaultSelected=a2 使其余 15 卡压暗到 18%，全景页第一印象像渲染故障；biz-ctx→画布间距 9px 偏紧
+- **修复（不动列几何——扩标签带会挤死布线走廊，测算后放弃）**：
+  1. 小地图**适配即隐**：`worldFits`（世界×zoom ≤ 视口）时不渲染；放大后回归、重置后再隐（浏览器实测两态 ✓）
+  2. `labelAtForRoute` 三级重写：①水平段上/下滑动 ②**竖直段右/左贴线**（跨层竖边主位，反哺边落 [747,639] 泳道间隙）③全线路 8px 采样四向偏移取零重叠/最小碰撞兜底；.lab 加白底 halo + z4 + 渲染移到节点之后
+  3. 泳道标签**标题/注释解耦**：药丸只放泳道名（26~43px），note 独立 `.lane-note-box`（118px 全带宽，10px 灰字）居中于药丸下方；配套修剪底座道注（去「支撑全部 AI 服务，数据不出域」尾巴）与召回道注（去箭头空格）
+  4. **悬停=聚光灯、选中=描边+抽屉**：related 只看 hoverId 不看 selectedId，加载全景全彩（dimCount 0 实测）；biz-ctx 下边距 10→14（视觉 16）
+- **组件化抽象**：
+  - `src/flow/tokens.ts`：构建期+运行时唯一几何事实源（PAGE_WIDTH/标签带/泳道间距/DEFAULT_H/minimap/zoom），消灭 auto-layout↔FlowCanvas 的 DEFAULT_H 手工同步注释
+  - `src/components/flow/`：FlowCanvas 473 行拆为 **LaneBand / NodeBox / EdgeLayer / FlowToolbar / MiniMap** 五组件 + 视口协调器（缩放/平移/手势/回中）
+- **验证**：layout 7 份 ✓ / validate 7 份 0 警告 ✓ / tsc ✓ / rules.test 10/10 ✓ / build 591.78KB（gzip 188.10KB）✓；浏览器复测 nodeOverlaps/textOverflow/labHits/noteSpill 全空、minimapHits 空、bizCtxGap 16 ✓；视觉终验「可放心作为对外演示截图」（shots/overall-flow-uireview-final.png，另有 -fixed.png 修复中态）
+- **踩坑**：标签带宽 118 扩至 150 的方案被测算否决——带右缘=布线窄通道左界，扩带即封走廊（列距跌破 40 红线）；`getByRole(button name=放大)` 定位超时改 evaluate 直驱；截图 activity capture 瞬时失败重试即过
+- **完成**：2026-10-06 上午 CST
+
+## 2026-10-06（凌晨二段）
+
+### 任务M：前期不部署本地大模型——ADR-014 口径落地
+- **输入**：用户定向「前期不要部署本地大模型、GPU 集群规模与 vLLM」
+- **落地**（scaffold ADR-014 + 横向视图 + 演示平台 C1 三处同步）：
+  1. scaffold `docs/DECISIONS.md` 追加 **ADR-014**：前期纯云端（LiteLLM 路由 GLM/Qwen/OpenAI，不采购 GPU/不部署 vLLM/不做私有化）；数据存储仍全内网（C1 约束的是数据不是算力）；再评估触发=账单交叉点/强合规/UIE 蒸馏达标
+  2. 部署拓扑（算力区划掉改前期不部署，受控出口区=前期模型主通道）／可用性（出域 fail-closed 前期无本地兜底；新增云端模型多 provider 切换行）／NARRATIVE_SYNC（词汇表+触发清单第 6 条）
+  3. 演示平台四页 C1 重写（overall/ai-data-platform/ai-search/ai-service）；overall p1 胶囊「私有化 GPU 集群」→「**模型网关 · 云端按次**」（LiteLLM 云端路由+多 provider 互备+后期选项口径）；底座道注改「模型网关（云端按次）」；d08/v04/s03 的私有化表述改「存储内网+调用走云端」
+- **验证**：layout/validate 7 份 0 警告 ✓ / tsc ✓ / build 590.95KB ✓；浏览器实测 p1 胶囊抽屉含 ADR-014/LiteLLM 云端口径/指标行（实测锚点=GLM/Qwen/OpenAI 已验证）✓
+- **完成**：2026-10-06 02:10 CST
+
+## 2026-10-06
+
+### 任务L：总架构完善①——口径同步到实现现状（PRD v4 / 检索栈重锚定 / ADR-013 / 类目树过渡态）
+- **输入**：总架构评估结论「文档与实现已漂移」+ 用户「逐一完善」指令
+- **口径刷新**（以 ai-platform-scaffold STATUS/PRD v4 为事实源）：
+  1. 属性模板：三源自建（自举 694 叶）→ **五源参考模板对齐＋长尾继承**（6,495 叶 100% 覆盖〔实测〕，≥3 属性叶 84.2%）；自举转持续反哺（g02 全面改写 + C1.land）
+  2. 检索栈：检索链归 AI 搜索团队（OpenSearch BM25+向量+RRF+Reranker），数据底座**不建检索栈不双写**、以 Query DSL 契约+25 核心属性 search_weight 导出交付（d04 改名「检索索引契约」；s03/s04/s05 同步）
+  3. 向量：L1 全量重嵌 176,074 done〔实测〕；**Milvus 代码退役、collection 留档**（d05 改写，如实退役不为「资产感」保留）
+  4. AI 兜底执行器谱系：qwen 按次现役 → UIE 蒸馏学生候选（切换=一致率+200 条基准）（g06）
+  5. 类目树过渡态：保利树 7,141/6,495 叶（合同标的）vs 工作树 13,646/叶 11,796 四级对齐中（g01 如实标注双轨）
+  6. 客服 ADR-013 固定业务流程：11 流程路由+域外固定拒答（floor=0.55 实测空带正中）不走 LLM（v03/v04）；工单方案 v2.0（v09）
+- **overall 七问回填**：b01~b08 补 legacy/humanRole/fallback/metrics（总页业务节点与分页拉齐）
+- **attr-extraction 迁链式布局**：5 泳道（供应商系统→商品中台流水线→AI 抽取·校验→运营人审→前台消费·反哺）+ chain n1→n8 + 反哺 chip row1；否分支 grayDash→dash（兜底语义图例对齐）；dataSupport 同步 v4 口径；viewH 790
+- **验证**：layout 7 份 ✓ / validate 7 份 0 警告 ✓ / tsc ✓ / 测试 10/10 ✓ / build 589.16KB ✓；浏览器实测 attr 五道蛇形 + g02 五源新口径 sub 生效（shots/attr-chain-v2.png）
+- **完成**：2026-10-06 01:30 CST
+
+## 2026-10-05（深夜）
+
+### 任务K：四段式完整性深检 → 七问闭环（人机分工/失败降级/环级验收/追溯链）
+- **输入**：用户问「四段式完整吗？需要再深度思考了解一些知识」
+- **框架对照检索**：Google PAIR 人机指南（automation↔augmentation 人机分工谱系 / graceful failure 专章 / 信任与可解释）＋ LLM 生产共识（护栏→降级链 缓存→小模型→规则/转人工 + 熔断 + fail-closed、少而准的人工闸门、分层评测防漂移）
+- **差距结论**：四段式缺三段半——人机分工（人去哪了）、失败降级（混在 risks.guard 未独立）、环级验收（指标只在页级 metricNote）、RTM 追溯链（重构时遗失）
+- **落地**：schema 新增 node.humanRole/fallback/metrics[{m,v}]/trace[string[]]；DetailPanel 渲染蓝底「人机分工」行、琥珀「出错时怎么办」条、「成效与验收」表（绿目标值）、灰 chips 追溯链；python dict-merge 回填 4 页 39 环节 + overall 11 节点追溯链（trace 数据对齐 model.yaml COMP/锚点）
+- **验证**：layout/validate 7 份 0 警告/tsc/测试 10/10/build 582.68KB ✓；浏览器实测 g06 抽屉七问全渲染（3 chips/3 指标行/降级条文案完整，shots/seven-questions-drawer.png）
+- **完成**：2026-10-05 23:59 CST
+
+## 2026-10-05（晚）
+
+### 任务J：总分建设——四系统专页（数据治理/AI数据中台/AI搜索/AI客服）+ 四段式内容模型
+- **开始**：2026-10-05 21:40 CST
+- **输入**：用户指令「按总分方式推进建设，写数据治理、AI数据中台、AI搜索、AI客服的流程和每个环节；写明以前怎么做、为什么用AI、怎么用AI、有哪些风险以及怎么避免；搜索方案补充细节」
+- **行业检索**（四组）：商品数据治理（阿里类目域/类目-属性-属性值三位一体/标题治理流水线/MDM）｜数据中台（DAMA-DMBOK/OneData/元数据即基础设施/质量稽核）｜搜索（美团 Query 理解/级联漏斗召回-粗排-精排-重排/零结果改写）｜客服 RAG（低置信拒答转人工共识/知识库运营>模型选型/Agentic RAG 降幻觉/阿里 AI+人）
+- **定稿**：
+  1. schema 四段式：node.legacy（以前怎么做）/whyAi（为什么用AI）/risks[{risk,guard}]（风险与规避），DetailPanel 渲染灰底「以前」+橙底「为什么」+红绿「风险与规避」表；ai 字段语义细化为「AI 怎么做」
+  2. platform 新增「数据」枚举（紫 #7c5cbf），HubHome 出现「数据治理与 AI 数据中台」分组（两页）
+  3. 四个新场景页（全部链式布局 + bizContext 红线）：
+     - data-governance（数据）：立基准（类目树/属性模板/标准字典）→ 治数据（挂载/标题/抽取/品牌）→ 守质量（校验/同款/入池），10 环节
+     - ai-data-platform（数据）：接入→主数据正源→质量三注册表→四资产（索引/向量/图谱/评测集）→安全→飞轮，9 环节
+     - ai-search（搜索）：Query理解/补全纠错→双路召回/级联排序→三面筛选/类目推荐/零结果兜底/对话导购/猜你喜欢→词库回流，10 环节
+     - ai-service（客服）：双通道接入/意图→FAQ/RAG/订单查询→置信路由/转人工摘要/坐席辅助/工单→知识运营与风控，10 环节
+- **完成**：2026-10-05 23:10 CST
+- **进度**：100%
+
+#### 踩坑备忘
+- bar 与非 bar 同泳道同行 fail-loud（f09 需 row:1 独占行）；loopchip 不撑列宽但仍受右边界检查（s10/v10 w170→140）
+- layout 中途失败会让后续文件拿不到坐标 → validate 报 x/y undefined——先修布局错误再重跑
+- risks 数组误留空对象 `{ref,how}` 会被 zod min(1) 拦——手写长 JSON 收尾要检查
+- svg.arrows path 计数含 2 个 marker 定义——断言边数要减 2
+## 2026-10-05（下午）
+
+### 任务I：全景二次重构——「业务在前、AI 在后」从 0 到 1 业务全景 + 上级业务红线
+- **开始**：2026-10-05 20:00 CST
+- **输入**：用户反馈「属性抽取·场景融合没有完整展示服务的上级业务是搜索；这份 AI 业务全景没法让人一眼看清；需要搜索一个从 0 到 1 如何通过 AI 搭建含 AI 功能商城的完整业务流程」
+- **行业检索**（六组，锚点齐）：通用电商链路（开店→发布商品→交易→履约→售后，腾讯万字拆解/人人都是产品经理）｜B2B P2P（寻源→询比价→PO→收货→三单匹配→对账→结算，SAP GR-Based IV/Odoo/知乎三向匹配）｜**Amazon AutoKnow**（KDD 2020，taxonomy 构建+属性发现抽取——属性治理的行业标杆）｜阿里京东中台（大中台小前台/言犀/京小智）｜Shopify Magic/AI 搜索发现层｜AI 导购客服（AI 店小蜜 AI+人、京东「搜索-比价-看规格-下单」AI 化、淘宝 AI 万能搜）
+- **定稿方案**：
+  1. **业务在前、AI 在后**：泳道改「业务三段（供给侧/需求侧/履约与服务）+ AI 服务层 + 数据底座」——业务主线八步 01~08 阶梯式穿三条业务泳道，AI 服务层 7 个节点一行排在业务下方，**灰虚线（grayDash，图例改「服务·支撑」）向上指向各自服务的上级业务**
+  2. **上级业务红线**：schema 新增 flow.bizContext——每个 AI 流程页必须答得出「服务于哪条上级业务」，渲染为画布上方蓝色定向条；attr-extraction 页补「挂在 02 治理上架 → 价值兑现于 04 搜索发现/05 比价决策」，收口 bar 改名「标准属性入库 → 上级业务：搜索发现·比价决策」
+  3. **「属性抽取的上级业务是搜索」显性化**：a2 属性治理·抽取（highlight，位于 04 搜索发现正下方）→ 灰虚线竖直向上入 b04，带标签「标准筛选属性」——用户反馈的核心诉求落为一条可见的线
+  4. **业务蓝图事实源**：knowledge/product/AI商城从0到1业务蓝图.md（对标表+八步主线+AI 服务映射表）
+- **完成**：2026-10-05 21:10 CST
+- **进度**：100%
+
+#### 落地内容
+1. schema：flow.bizContext（上级业务上下文，受限富文本）；ScenarioPage 渲染 .biz-ctx 蓝条；FlowCanvas 图例 grayDash 改「服务·支撑」
+2. auto-layout：loopchip 不再撑列宽（底座 pills 以注释件看待，列内居中、允许向间隙少量外溢）——修复 pills 把 8 列间距挤到 31px<40 的 fail
+3. overall-flow.json v3：19 节点（业务 b01~b08 + AI a1~a7 + 飞轮 f1 + pills p1~p3）/ 15 边（7 主链 main + 7 服务 grayDash + 1 反哺 dash）/ 5 泳道，画布 1360×781；业务节点 panelAip 挂业务域（SUP/OP/SHOP），AI 节点挂 AIP/AICS；内容带行业对标锚点（AutoKnow/三单匹配/AI 店小蜜/P2P）
+4. attr-extraction.json：bizContext + subtitle + n8 bar 改名
+5. 追溯矩阵 L3 口径二次同步（b/a/f/p 新编号体系 + 业务层/AI 层双向自检分组）
+
+#### 验证链（全绿）
+- layout ✓（19 节点/15 边/5 道 1360×781；contract-blueprint 24/33/2167 无回归）｜ validate 3 份 0 警告 ✓ ｜ tsc ✓ ｜ rules.test 10/10 ✓ ｜ build 457.10KB ✓
+- 浏览器实测：业务八步阶梯可读、AI 层 7 节点一行、服务灰虚线清晰不穿节点、「标准筛选属性」标签显眼、「反哺」标签干净、泳道注可读、biz-ctx 条渲染（overall + attr 两页）；attr 页 9 节点无回归（shots/biz-first-v3.png）
+
+#### 踩坑备忘
+- **loopchip 撑列宽**：链式布局 colWidths 原先取列内最宽节点，pills（w130~150）把业务列撑宽导致 8 列间距 31px < GRID_GAP 40 fail——loopchip 改为不参与列宽（垂直走线走列中心，pills 向间隙外溢无碰撞）
+- **视觉模型复核结论截断**：analyze_image 长 checklist 回答会被截断，关键边（a2→b04 标签、反哺线、a3 绕行）拆成聚焦小问题二次复核全部通过
+
+## 2026-10-05
+
+### 任务H：全景泳道重构——业务主体六道 + RTM 十环节链式布局
+- **开始**：2026-10-05 15:10 CST
+- **输入**：用户反馈「呈现效果和属性抽取·场景融合交互图差太多；业务没理清楚，不同业务没有拆解入口和出口；UI 混乱，模块间距和连线要用浏览器看清并算出合适边距」+ 参考文档 `ai-platform-scaffold/docs/product/architecture/RTM-架构缩放图.html`（业务知识与实图布局）
+- **问题诊断**（浏览器几何实测）：
+  - 业务理不清根因：泳道=架构四层 → 三条业务（商品治理/搜索/客服）全部挤进「AI 能力层」一条带，01~14 流水账编号不对应任何权威口径，入口/出口无标识
+  - UI 混乱根因：ELK 每泳道独立布局 → 15 节点全部落在 x=130~690 左侧两列窄带（画布 1360 宽只用一半，右侧 670px 空白）；AI 能力层 483px 塞 9 节点三行贴边；3 条 infra grayDash 长飞线（965→575、1081→761 纵穿半幅画布）
+- **定稿方案**（对齐 RTM-泳道全景权威口径）：
+  1. **泳道换轴**：架构四层 → 业务主体六道（供应商侧[业务入口]/AI 商品中台[把货变标准]/AI 搜索中台[让人找到货]/采购·交易[业务出口]/AI 客服中台[服务出口]/数据底座[支撑+飞轮]）；架构四层视图由 contract-blueprint 页继续承载，双页职责分离
+  2. **主链=RTM 十环节 01~10**：01 推品接入→02 图文审核→03 治理流水线→04 标准商品池→05 语义检索→06 对话导购·推荐→07 下单交易·集采合规→08 智能体接待→09 转人工·工单→10 数据回流飞轮；infra 三节点降为底座道 pills（p1 GPU 集群/p2 云端网关·脱敏/p3 评测平台）
+  3. **链式布局规则**（auto-layout 新模式）：flow.chain 声明主链 → 列=链位（跨泳道保持同列→竖向衔接天然对齐，同泳道 +1），非主链节点显式 col，泳道内 row 分行；确定性推导、零手工坐标
+  4. **连线瘦身**：15 边 → 11 边全短边（8 主链 + 3 飞轮 dash：05→10/09→10 收集 + 10→03 反哺「词库·模板·阈值」），全部走空列走廊，零交叉零飞线
+- **完成**：2026-10-05 17:40 CST
+- **进度**：100%
+
+#### 落地内容
+1. **schema 扩展**：flow.chain（链式布局主链）/flow.viewH（视口高）/node.col/node.row（链式网格）/lane.note（泳道角色注——入口出口的显性载体）/lane.tone（biz/ai/base 三色分区）
+2. **auto-layout.ts 双模式**：chainColumns（列推导+显式覆盖+同 lane+col+row 碰撞 fail-loud+列间距均摊≥GRID_GAP 校验）→ chainLaneGrid（行带垂直居中/列内水平居中/bar 全宽占行）→ CHAIN_* 紧凑堆叠常量（16/10/26/10 vs ELK 模式 28/14/40）；ELK 分支零改动（contract-blueprint 无回归）
+3. **FlowCanvas**：lane tone class + note 渲染；图例按场景实际边型过滤（无 grayDash 边不再显示空开关）；viewH 消费（prop > flow.viewH > 620）
+4. **overall-flow.json 重写**：六道十环节 + 13 节点（10 主链 + 3 pills）+ 11 边；节点内容融合 RTM 泳道全景四段式（场景/AI 做了什么/怎么解决+技术锚点/前后对比）与实测口径（189,211 在管/94.9% 挂载/176,074 标题/0.911 FAQ 命中等）；constraints.land 同步新环节号
+5. **知识库同步**：商城AI需求追溯矩阵.md L3 口径全面换 n01~n10+p1~p3（矩阵 A/B/C、约束表、双向自检）
+- **画布产物**：1360×829（旧 1315 但左半空置），满宽利用，节点等高 90px，最小水平间隙 72px
+
+#### 验证链（全绿）
+- `npm run layout` ✓（overall 13 节点/11 边/六道 1360×829；contract-blueprint 24/33/2167 无回归）｜ `npx tsc --noEmit` ✓ ｜ `npm run validate` 3 份 ✓ 0 警告 ｜ `rules.test.ts` 10/10 ✓ ｜ `npm run build` 448.81KB ✓
+- 浏览器目检（agent-browser + 视觉模型两轮）：六道蛇形主链连贯、竖直短箭头、飞轮三支一环走空列零穿越、底部横条+三胶囊整齐、节点文字无溢出、左侧标签带无遮挡、小地图/数据支撑/工具栏不压内容 ✓（shots/chain-flow-v2.png）
+- 交互：点 03 治理流水线 → 右抽屉四段式（3 张解决卡+panelAip 域编号）✓；attr-extraction 回归 9 节点/4 泳道/11 边/图例 3 项 ✓
+
+#### 踩坑备忘
+- **〔设计目标〕不是口径词**：rules CALIBER_WORDS 只有 示意/约/≈/基线/SOW/实测/示例——「下降 60% 以上〔设计目标〕」被红线 5 拦截，改成「示意下降 60% 以上」过
+- **layout 脚本回写后 Edit 冲突**：npm run layout 会重写 scenarios/*.json（回写坐标），改文案必须重读文件再 Edit
+- **IAB 标签页跨 JS 调用丢失**：tabs.list() 两次调用间可能返回空（会话释放），浏览器操作一律「单次调用内完成 导航+操作+测量/截图」的自包含模式
+- **AI 视觉复核结论自相矛盾风险**：距离/间距类结论以 DOM offsetLeft/offsetTop 实测为准（本次最小间隙 72px 为实测值），截图视觉复核只判「遮挡/溢出/穿越」类二值问题
+
 ## 2026-10-03
 
 ### 任务G：合同蓝图「总索引 + 分层下钻」产品化（/goal）

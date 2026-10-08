@@ -45,9 +45,32 @@ export function DetailPanel({ node, refs, onOpenRef }: Props) {
         })}
       </div>
 
+      {(node.legacy || node.whyAi || node.humanRole) && (
+        <div className="p-evolve">
+          {node.legacy && (
+            <div className="p-evolve-row legacy">
+              <span className="p-evolve-tag">以前怎么做</span>
+              <div className="txt">{rich(node.legacy)}</div>
+            </div>
+          )}
+          {node.whyAi && (
+            <div className="p-evolve-row why">
+              <span className="p-evolve-tag">为什么用 AI</span>
+              <div className="txt">{rich(node.whyAi)}</div>
+            </div>
+          )}
+          {node.humanRole && (
+            <div className="p-evolve-row human">
+              <span className="p-evolve-tag">人机分工</span>
+              <div className="txt">{rich(node.humanRole)}</div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="p-grid">
         <div className="p-col">
-          <h5>AI 做了什么</h5>
+          <h5>AI 怎么做</h5>
           <div className="txt">{rich(node.ai)}</div>
         </div>
         <div className="p-col">
@@ -59,6 +82,60 @@ export function DetailPanel({ node, refs, onOpenRef }: Props) {
           <ul>{node.highlights.map((h, i) => <li key={i}>{h}</li>)}</ul>
         </div>
       </div>
+
+      {node.risks && node.risks.length > 0 && (
+        <div className="p-risks">
+          <div className="sec-t">■ 风险与规避</div>
+          <table>
+            <thead>
+              <tr><th style={{ width: "44%" }}>风险</th><th>规避手段</th></tr>
+            </thead>
+            <tbody>
+              {node.risks.map((r, i) => (
+                <tr key={i}>
+                  <td className="rk">{rich(r.risk)}</td>
+                  <td className="gd">{rich(r.guard)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {node.fallback && (
+        <div className="p-fallback">
+          <span className="p-evolve-tag">出错时怎么办</span>
+          <div className="txt">{rich(node.fallback)}</div>
+        </div>
+      )}
+
+      {node.metrics && node.metrics.length > 0 && (
+        <div className="p-metrics">
+          <div className="sec-t">■ 成效与验收</div>
+          <table>
+            <thead>
+              <tr><th style={{ width: "42%" }}>指标</th><th>目标 / 实测</th></tr>
+            </thead>
+            <tbody>
+              {node.metrics.map((r, i) => (
+                <tr key={i}>
+                  <td className="mk">{r.m}</td>
+                  <td className="mv">{r.v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {node.trace && node.trace.length > 0 && (
+        <div className="p-trace">
+          <div className="sec-t">■ 追溯链（能力 → 组件 → 技术锚点，反向即「被服务」）</div>
+          <div className="p-trace-chips">
+            {node.trace.map((t, i) => <span key={i} className="p-trace-chip">{t}</span>)}
+          </div>
+        </div>
+      )}
 
       {node.beforeAfter.length > 0 && (
         <div className="ba">

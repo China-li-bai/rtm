@@ -19,7 +19,11 @@ export function useScale(baseWidth: number) {
       if (w === 0) return;
       const s = Math.min(1.15, w / baseWidth);
       setScale(s);
-      outer.style.height = `${inner.scrollHeight * s}px`;
+      // 高度收拢：用未取整的布局高度（scrollHeight 是取整值会丢亚像素，
+      // 缩放后放大成 2~5px，把页尾 .note 裁掉），ceil 后再留 2px 覆盖
+      // 末元素 margin 折叠与浏览器取整残差。
+      const h = inner.getBoundingClientRect().height * s;
+      outer.style.height = `${Math.ceil(h) + 2}px`;
     };
     update();
     const ro = new ResizeObserver(update);

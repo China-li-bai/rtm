@@ -43,28 +43,18 @@ import {
 import ElkConstructor from "elkjs/lib/elk.bundled.js";
 import type { ELK, ElkNode } from "elkjs/lib/elk-api";
 
-/** 渲染器默认节点高度，须与 FlowCanvas.DEFAULT_H 保持一致 */
-const DEFAULT_H = {
-  normal: 76,
-  highlight: 76,
-  dashed: 76,
-  diamond: 58,
-  bar: 44,
-  loopchip: 32,
-} as const;
+// 布局 Token：构建期与运行时共用的唯一几何事实源（src/flow/tokens.ts）
+import {
+  FLOW,
+  NODE_DEFAULT_H as DEFAULT_H,
+  NODE_LEFT,
+  CONTENT_RIGHT,
+} from "../src/flow/tokens";
 
-const LANE_TOP_PAD = 28; // 泳道顶部留白
-const LANE_BOTTOM_PAD = 14; // 泳道底部留白
-const LANE_GAP = 40; // 相邻泳道间距
-const LANE_LEFT = 12; // .lane 的 left
-const LABEL_BAND = 118; // 左侧层名标签带
-const CANVAS_RIGHT_PAD = 12;
-const PAGE_WIDTH = 1360;
-const NODE_LEFT = LANE_LEFT + LABEL_BAND; // 130：节点左缘
-const CONTENT_RIGHT = PAGE_WIDTH - CANVAS_RIGHT_PAD; // 1348
+const { PAGE_WIDTH, LANE_LEFT, GRID_GAP, LANE_GAP, LANE_TOP_PAD, LANE_BOTTOM_PAD,
+  CHAIN_LANE_TOP_PAD, CHAIN_LANE_BOTTOM_PAD, CHAIN_LANE_GAP, CHAIN_ROW_GAP } = FLOW;
 const NODE_NODE_GAP = 40; // 同层层内节点水平间距（ELK 无连边时忽略该参数，仅名义保留）
 const ROW_GAP = 34; // 同层层内换行的行间距（同上）
-const GRID_GAP = 40; // 网格重排的行列间距，须 > 2×SHAPE_BUFFER，保证布线走廊通畅
 
 // obstacle-router 布线参数（libavoid 语义）
 const SHAPE_BUFFER = 10; // 障碍外间距
@@ -142,6 +132,8 @@ interface RawNode {
   id: string;
   kind?: keyof typeof DEFAULT_H;
   laneIndex?: number;
+  col?: number;
+  row?: number;
   h?: number;
   w: number;
   x?: number;
@@ -171,6 +163,7 @@ interface RawFlow {
   width?: number;
   height?: number;
   autoLayout?: boolean;
+  chain?: string[];
   lanes: Array<{ label: string; top?: number; height?: number }>;
   nodes: RawNode[];
   edges: RawEdge[];
@@ -322,10 +315,147 @@ function labelWidth(text: string): number {
   return w;
 }
 
-/** 标签渲染高度（约等于 .lab 行高），用于与节点做矩形避障 */
-const LABEL_H = 16;
-/** 标签与线段的纵向间距（.lab 渲染在锚点处，锚点取线段上方） */
+// ———————————————————— 链式布局（flow.chain）————————————————————
+//
+// 泳道=业务主体（供应商侧/商品中台/搜索中台/交易/客服/底座），主链按业务
+// 推进顺序蛇形穿过各泳道。列分配规则（确定性）：
+//   · 链首节点在第 0 列；
+//   · 后继节点与前一节点同泳道 → 列 +1（泳道内从左到右推进）；
+//   · 后继节点换泳道 → 列不变（跨泳道竖向衔接天然上下对齐）。
+// 该规则复现 RTM 泳道全景的布局语言：每道 1~3 个节点、主链 ↘ 对角推进、
+// 跨道箭头全部竖直短边。非主链节点（如底座 pills）必须显式声明 col。
+// 节点显式 col 可覆盖推导值（覆盖后链位从覆盖值继续推进）。
+
+interface ChainGrid {
+  cols: Map<string, number>;
+  colLefts: number[];
+  colWidths: number[];
+}
+
+function chainColumns(flow: RawFlow, file: string): ChainGrid {
+  const byId = new Map(flow.nodes.map((n) => [n.id, n]));
+  const cols = new Map<string, number>();
+
+  let prevId: string | null = null;
+  for (const id of flow.chain as string[]) {
+    const n = byId.get(id);
+    if (!n) throw new Error(`${file}：chain 引用了不存在的节点 ${id}`);
+    const lane = n.laneIndex;
+    if (lane == null) {
+      throw new Error(`${file}：chain 节点 ${id} 缺少 laneIndex`);
+    }
+    let derived: number;
+    if (prevId == null) {
+      derived = 0;
+    } else {
+      const prev = byId.get(prevId)!;
+      derived = lane === prev.laneIndex ? cols.get(prevId)! + 1 : cols.get(prevId)!;
+    }
+    cols.set(id, n.col ?? derived);
+    prevId = id;
+  }
+
+  for (const n of flow.nodes) {
+    if (cols.has(n.id)) continue;
+    if ((n.kind ?? "normal") === "bar") {
+      throw new Error(`${file}：bar 节点 ${n.id} 不可游离于 chain 之外（bar 即主链终点）`);
+    }
+    if (n.col == null) {
+      throw new Error(`${file}：链式布局下非主链节点 ${n.id} 必须显式声明 col`);
+    }
+    cols.set(n.id, n.col);
+  }
+
+  // 列宽 = 该列最宽非 bar 节点；loopchip（底座 pills 等注释件）不撑列宽——
+  // 按列内居中放置、允许向列间隙少量外溢（垂直走线走列中心，间隙不布线）
+  const colWidths: number[] = [];
+  for (const n of flow.nodes) {
+    if ((n.kind ?? "normal") === "bar" || (n.kind ?? "normal") === "loopchip") continue;
+    const c = cols.get(n.id)!;
+    colWidths[c] = Math.max(colWidths[c] ?? 0, n.w);
+  }
+  const ncols = colWidths.length;
+  const usable = CONTENT_RIGHT - NODE_LEFT;
+  const totalNodeW = colWidths.reduce((a, b) => a + b, 0);
+  const gap = ncols > 1 ? Math.floor((usable - totalNodeW) / (ncols - 1)) : 0;
+  if (gap < GRID_GAP) {
+    throw new Error(
+      `${file}：链式布局列间距 ${gap}px 不足（需 ≥${GRID_GAP}）——列数过多或节点过宽`,
+    );
+  }
+  const colLefts: number[] = [];
+  let cx = NODE_LEFT;
+  for (let c = 0; c < ncols; c++) {
+    colLefts[c] = Math.round(cx);
+    cx += colWidths[c] + gap;
+  }
+  return { cols, colLefts, colWidths };
+}
+
+// ———————————————————— 链式布局的泳道内网格 ————————————————————
+function chainLaneGrid(
+  list: RawFlow["nodes"],
+  grid: ChainGrid,
+): { pos: Map<string, { x: number; y: number }>; height: number } {
+  const rows = new Map<number, RawFlow["nodes"]>();
+  for (const n of list) {
+    const r = n.row ?? 0;
+    if (!rows.has(r)) rows.set(r, []);
+    rows.get(r)!.push(n);
+  }
+  // 碰撞检查：同泳道同 (row,col) 只允许一个节点；bar 横贯全宽，其行内不得再有节点
+  for (const [r, ns] of rows) {
+    const seen = new Set<number>();
+    for (const n of ns) {
+      if ((n.kind ?? "normal") === "bar") {
+        if (ns.length > 1) {
+          throw new Error(`泳道行 ${r}：bar 横贯全宽，行内不得再放节点（${n.id}）`);
+        }
+        continue;
+      }
+      const c = grid.cols.get(n.id)!;
+      if (seen.has(c)) {
+        throw new Error(`泳道行 ${r} 列 ${c}：节点 ${n.id} 与同列节点重叠——调整 col/row`);
+      }
+      seen.add(c);
+    }
+  }
+  const rowIdxs = [...rows.keys()].sort((a, b) => a - b);
+  const rowH = rowIdxs.map((r) =>
+    Math.max(...rows.get(r)!.map((n) => nodeH(n))),
+  );
+  const rowTops: number[] = [];
+  rowIdxs.forEach((_r, i) => {
+    rowTops[i] = i === 0 ? 0 : rowTops[i - 1] + rowH[i - 1] + CHAIN_ROW_GAP;
+  });
+
+  const pos = new Map<string, { x: number; y: number }>();
+  rowIdxs.forEach((r, i) => {
+    for (const n of rows.get(r)!) {
+      const h = nodeH(n);
+      const y = Math.round(rowTops[i] + (rowH[i] - h) / 2);
+      let x: number;
+      if ((n.kind ?? "normal") === "bar") {
+        x = NODE_LEFT;
+      } else {
+        const c = grid.cols.get(n.id)!;
+        x = Math.round(grid.colLefts[c] + (grid.colWidths[c] - n.w) / 2);
+      }
+      pos.set(n.id, { x, y });
+    }
+  });
+  const height = rowTops.length === 0 ? 0 : rowTops[rowTops.length - 1] + rowH[rowH.length - 1];
+  return { pos, height };
+}
+
+/** 标签渲染高度（.lab 行高 + halo 上下 padding），用于与节点做矩形避障 */
+const LABEL_H = 18;
+/** 标签与水平段的纵向间距（.lab 渲染在锚点处，锚点取线段上方） */
 const LABEL_GAP = 17;
+/** 标签与竖直段的横向间距 */
+const LABEL_SIDE_GAP = 8;
+/** 标签 halo 左右 padding 合计（theme.css .lab padding 1px 6px），估宽时补偿 */
+const LABEL_HALO_PAD = 12;
 
 /**
  * 判断标签矩形是否与任一节点框相交（节点框按 LABEL_PAD 四周膨胀后判定）。
@@ -351,12 +481,30 @@ function labelHitsBox(
   return false;
 }
 
+/** 标签矩形与全部节点框（含 LABEL_PAD）的最大重叠面积——兜底时取最小碰撞位 */
+function labelOverlapArea(
+  lx: number, ly: number, lw: number,
+  boxes: ReadonlyArray<{ x: number; y: number; w: number; h: number }>,
+): number {
+  let worst = 0;
+  for (const b of boxes) {
+    const ox = Math.min(lx + lw, b.x + b.w + LABEL_PAD) - Math.max(lx, b.x - LABEL_PAD);
+    const oy = Math.min(ly + LABEL_H, b.y + b.h + LABEL_PAD) - Math.max(ly, b.y - LABEL_PAD);
+    if (ox > 0 && oy > 0) worst = Math.max(worst, Math.round(ox * oy));
+  }
+  return worst;
+}
+
 /**
  * 按正交路线自动计算标签锚点（左上角坐标），且保证不压任何节点。
  *
- * 取最长水平段、标签贴其上方，先居中再以 2px 步长向两侧滑动，选首个不与
- * 节点框相交的位置；该段全程被遮挡时依次尝试更短水平段；都不行则回退到
- * 路线中点（此时按"最小碰撞"放置）。
+ * 三级放置（确定性，全部经过节点避障；修复：旧版无 ≥标签宽水平段时直接
+ * 回退路线中点、不做避障，导致标签压在节点上且被后绘制的节点卡片盖住）：
+ *  ① 最长水平段上方/下方居中，2px 步长向两侧滑动——同层边的常规位；
+ *  ② 竖直段右侧/左侧贴线，沿线居中上下滑动——跨层竖边的主放置位
+ *    （短横边放不下标签的场景，如底座横条→上层服务的反哺边）；
+ *  ③ 兜底：沿整条路线 8px 采样四向偏移，零重叠即用；全部碰撞时取
+ *     重叠面积最小的锚点（极少触发，且 .lab 白底 halo 保证可读）。
  *
  * @param route 含起止点的完整正交点串
  * @param text 标签文本
@@ -368,37 +516,78 @@ function labelAtForRoute(
   text: string,
   boxes: ReadonlyArray<{ x: number; y: number; w: number; h: number }>,
 ): Pt {
-  const lw = labelWidth(text);
-  const segs: { x1: number; x2: number; y: number }[] = [];
+  const lw = labelWidth(text) + LABEL_HALO_PAD;
+  const hsegs: { x1: number; x2: number; y: number }[] = [];
+  const vsegs: { y1: number; y2: number; x: number }[] = [];
   for (let i = 1; i < route.length; i++) {
-    if (route[i - 1][1] === route[i][1]) {
-      segs.push({
-        x1: Math.min(route[i - 1][0], route[i][0]),
-        x2: Math.max(route[i - 1][0], route[i][0]),
-        y: route[i][1],
-      });
-    }
+    const [px, py] = route[i - 1];
+    const [qx, qy] = route[i];
+    if (py === qy) hsegs.push({ x1: Math.min(px, qx), x2: Math.max(px, qx), y: py });
+    else if (px === qx) vsegs.push({ y1: Math.min(py, qy), y2: Math.max(py, qy), x: px });
   }
-  segs.sort((a, b) => b.x2 - b.x1 - (a.x2 - a.x1));
+  hsegs.sort((a, b) => b.x2 - b.x1 - (a.x2 - a.x1));
+  vsegs.sort((a, b) => b.y2 - b.y1 - (a.y2 - a.y1));
 
-  for (const seg of segs) {
+  // ① 水平段：上方优先，被占再试下方
+  for (const seg of hsegs) {
     if (seg.x2 - seg.x1 < lw) continue; // 段长放不下标签
-    const ly = seg.y - LABEL_GAP;
-    const center = Math.round((seg.x1 + seg.x2) / 2 - lw / 2);
-    // 从居中位置开始，向两侧逐级滑动，首个不压节点即采用
-    for (let step = 0; ; step += 2) {
-      const offsets = step === 0 ? [0] : [step, -step];
-      for (const off of offsets) {
-        const lx = center + off;
-        if (lx < seg.x1 || lx + lw > seg.x2) continue;
-        if (!labelHitsBox(lx, ly, lw, boxes)) return [lx, ly];
+    for (const ly of [seg.y - LABEL_GAP, seg.y + 4]) {
+      const center = Math.round((seg.x1 + seg.x2) / 2 - lw / 2);
+      for (let step = 0; ; step += 2) {
+        const offsets = step === 0 ? [0] : [step, -step];
+        for (const off of offsets) {
+          const lx = center + off;
+          if (lx < seg.x1 || lx + lw > seg.x2) continue;
+          if (!labelHitsBox(lx, ly, lw, boxes)) return [lx, ly];
+        }
+        if (center + step > seg.x2 && center - step < seg.x1) break;
       }
-      if (center + step > seg.x2 && center - step < seg.x1) break;
     }
   }
-  // 无可用水平段：回退路线中点，右上偏移（极少触发）
-  const mid = route[Math.floor((route.length - 1) / 2)];
-  return [Math.round(mid[0] + 4), Math.round(mid[1] - LABEL_GAP - 1)];
+
+  // ② 竖直段：右侧贴线优先，被占再试左侧；沿线居中上下滑动
+  for (const seg of vsegs) {
+    if (seg.y2 - seg.y1 < LABEL_H + 6) continue;
+    const cy = Math.round((seg.y1 + seg.y2) / 2 - LABEL_H / 2);
+    for (const lx of [seg.x + LABEL_SIDE_GAP, seg.x - LABEL_SIDE_GAP - lw]) {
+      if (lx < NODE_LEFT || lx + lw > CONTENT_RIGHT) continue;
+      for (let step = 0; ; step += 4) {
+        const offsets = step === 0 ? [0] : [step, -step];
+        for (const off of offsets) {
+          const ly = cy + off;
+          if (ly < seg.y1 - 2 || ly + LABEL_H > seg.y2 + 2) continue;
+          if (!labelHitsBox(lx, ly, lw, boxes)) return [lx, ly];
+        }
+        if (cy + step > seg.y2 && cy - step < seg.y1) break;
+      }
+    }
+  }
+
+  // ③ 全线采样兜底：四向偏移，零重叠即用；全撞取最小重叠
+  let best: { at: Pt; area: number } | null = null;
+  for (let i = 1; i < route.length; i++) {
+    const [px, py] = route[i - 1];
+    const [qx, qy] = route[i];
+    const len = Math.hypot(qx - px, qy - py);
+    const steps = Math.max(1, Math.ceil(len / 8));
+    for (let s = 0; s <= steps; s++) {
+      const t = s / steps;
+      const ax = Math.round(px + (qx - px) * t);
+      const ay = Math.round(py + (qy - py) * t);
+      const cands: Array<[number, number]> = [
+        [ax + 4, ay + 4],
+        [ax + 4, ay - LABEL_GAP],
+        [ax - lw - 4, ay + 4],
+        [ax - lw - 4, ay - LABEL_GAP],
+      ];
+      for (const [cx, cy] of cands) {
+        const area = labelOverlapArea(cx, cy, lw, boxes);
+        if (area === 0) return [cx, cy];
+        if (!best || area < best.area) best = { at: [cx, cy], area };
+      }
+    }
+  }
+  return best ? best.at : [route[0][0], route[0][1] - LABEL_GAP];
 }
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -493,7 +682,8 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
   }
 
   // —— 泳道左侧层名标签带：只封层名"文字区"，在带的右缘逼出固定窄通道 ——
-  // 不封整条带：n11 全宽 bar 横贯公共底座层，跨层反哺边（n12→n3 等）几何上只能
+  // 不封整条带：全宽 bar（如 overall-flow 飞轮横条 / contract-blueprint 集成层）会
+  // 横贯某条泳道，跨层反哺边几何上只能
   // 从首列左侧绕行，全封会把路线逼到画布外（x<0）。障碍左缘延伸到极左，杜绝
   // 路由器绕出画布；右缘止于文字区右侧，使所有绕行竖线汇聚到同一条窄通道
   // （约 x 110..120），不再贴着层名文字散成一排。
@@ -608,7 +798,11 @@ async function main(): Promise<void> {
     const laneNodeLists: RawFlow["nodes"][] = flow.lanes.map(() => []);
     for (const n of flow.nodes) laneNodeLists[n.laneIndex ?? 0].push(n);
 
-    // —— 阶段 1：各泳道独立 RIGHT 布局（只定位节点） ——
+    // —— 阶段 1+2（链式布局分支）：列=链位、跨泳道保持同列，蛇形推进 ——
+    const chainMode = Array.isArray(flow.chain) && (flow.chain as string[]).length > 0;
+    const chainGrid = chainMode ? chainColumns(flow, file) : null;
+
+    // —— 阶段 1（ELK 分支）：各泳道独立 RIGHT 布局（只定位节点） ——
     const laneOuts = await Promise.all(
       laneNodeLists.map((list) => {
         if (list.length === 1 && (list[0].kind ?? "normal") === "bar") {
@@ -621,7 +815,10 @@ async function main(): Promise<void> {
 
     // —— 阶段 2：泳道垂直堆叠；节点经固定间距网格重排后换算全局坐标 ——
     const laid = new Map<string, LaidNode>();
-    let cursorY = LANE_TOP_PAD;
+    let cursorY = chainMode ? CHAIN_LANE_TOP_PAD : LANE_TOP_PAD;
+    const TOP_PAD = chainMode ? CHAIN_LANE_TOP_PAD : LANE_TOP_PAD;
+    const BOTTOM_PAD = chainMode ? CHAIN_LANE_BOTTOM_PAD : LANE_BOTTOM_PAD;
+    const USE_GAP = chainMode ? CHAIN_LANE_GAP : LANE_GAP;
     laneNodeLists.forEach((list, li) => {
       const out = laneOuts[li];
 
@@ -629,37 +826,37 @@ async function main(): Promise<void> {
       const barNodes = list.filter((n) => (n.kind ?? "normal") === "bar");
       for (const n of barNodes) n.w = CONTENT_RIGHT - NODE_LEFT;
 
-      // 非 bar 节点的最终尺寸表，喂给网格重排
-      const gridNodes = list.filter((n) => (n.kind ?? "normal") !== "bar");
-      const sized = new Map<string, { w: number; h: number }>(
-        gridNodes.map((n) => [n.id, { w: n.w, h: nodeH(n) }]),
-      );
       let gridPos = new Map<string, { x: number; y: number }>();
       let gridH = 0;
-      if (gridNodes.length > 0) {
-        if (!out) throw new Error(`${file}：泳道 ${li} 缺少 ELK 布局产物`);
-        const remapped = remapLaneGrid(out, sized);
-        gridPos = remapped.pos;
-        gridH = remapped.height;
+      if (chainGrid) {
+        // 链式分支：pos.x 已是全局坐标（colLefts 全局），高度含 bar 行
+        const r = chainLaneGrid(list, chainGrid);
+        gridPos = r.pos;
+        gridH = r.height;
+      } else {
+        // ELK 分支：非 bar 节点的最终尺寸表，喂给网格重排（局部坐标）
+        const gridNodes = list.filter((n) => (n.kind ?? "normal") !== "bar");
+        const sized = new Map<string, { w: number; h: number }>(
+          gridNodes.map((n) => [n.id, { w: n.w, h: nodeH(n) }]),
+        );
+        if (gridNodes.length > 0) {
+          if (!out) throw new Error(`${file}：泳道 ${li} 缺少 ELK 布局产物`);
+          const remapped = remapLaneGrid(out, sized);
+          gridPos = remapped.pos;
+          gridH = remapped.height;
+        }
       }
 
       let laneContentH = 0;
       for (const n of list) {
         const kind = (n.kind ?? "normal") as keyof typeof DEFAULT_H;
         const h = nodeH(n);
-        let x: number;
-        let y: number;
-        if (kind === "bar") {
-          x = NODE_LEFT;
-          y = cursorY;
-        } else {
-          const gp = gridPos.get(n.id);
-          if (!gp) {
-            throw new Error(`${file}：网格重排未产出节点 ${n.id} 的坐标`);
-          }
-          x = NODE_LEFT + gp.x;
-          y = cursorY + gp.y;
+        const gp = gridPos.get(n.id);
+        if (!gp) {
+          throw new Error(`${file}：网格重排未产出节点 ${n.id} 的坐标`);
         }
+        const x = chainGrid ? gp.x : kind === "bar" ? NODE_LEFT : NODE_LEFT + gp.x;
+        const y = cursorY + gp.y;
         laid.set(n.id, { id: n.id, kind, lane: li, w: n.w, h, x, y });
         n.x = Math.round(x);
         n.y = Math.round(y);
@@ -667,16 +864,16 @@ async function main(): Promise<void> {
         n.h = h;
       }
 
-      // 泳道内容高度：网格高/bar 高取大者；bar 自身高度纳入堆叠
-      const barsH = barNodes.reduce((acc, n) => acc + nodeH(n), 0);
+      // 泳道内容高度：链式分支 gridH 已含 bar 行；ELK 分支取网格高/bar 高大者
+      const barsH = chainGrid ? 0 : barNodes.reduce((acc, n) => acc + nodeH(n), 0);
       laneContentH = Math.max(gridH, barsH);
-      flow.lanes[li].top = Math.round(cursorY - LANE_TOP_PAD);
+      flow.lanes[li].top = Math.round(cursorY - TOP_PAD);
       flow.lanes[li].height = Math.round(
-        laneContentH + LANE_TOP_PAD + LANE_BOTTOM_PAD,
+        laneContentH + TOP_PAD + BOTTOM_PAD,
       );
-      cursorY += laneContentH + LANE_TOP_PAD + LANE_BOTTOM_PAD + LANE_GAP;
+      cursorY += laneContentH + TOP_PAD + BOTTOM_PAD + USE_GAP;
     });
-    const canvasBottom = cursorY - LANE_GAP;
+    const canvasBottom = cursorY - USE_GAP;
 
     // 宽度红线：层内布局不得超出内容区
     const overflow = flow.nodes

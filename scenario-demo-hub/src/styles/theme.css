@@ -99,8 +99,19 @@ h2 small { font-weight: 400; font-size: 12px; color: var(--c-gray); margin-left:
 .flow-chip.off .lg { border-top-color: var(--c-gray-3); }
 .flow-minimap { position: absolute; right: 10px; bottom: 10px; z-index: 5; background: rgba(255,255,255,0.94); border: 1px solid var(--c-line); border-radius: 8px; padding: 4px; cursor: crosshair; box-shadow: 0 2px 10px rgba(39,49,61,0.12); line-height: 0; }
 .mm-vp { fill: rgba(255,75,22,0.08); stroke: var(--c-accent); stroke-width: 2; }
+/* ---------- 上级业务上下文条（画布上方定向） ---------- */
+.biz-ctx { display: flex; align-items: flex-start; gap: 10px; width: var(--page-w); margin: 0 0 14px; padding: 9px 14px; background: #eef4fa; border: 1px solid #c9dced; border-left: 4px solid #2b6cb8; border-radius: 8px; }
+.biz-ctx-tag { flex: none; font-size: 11px; font-weight: 800; color: #2b6cb8; background: #fff; border: 1px solid #c9dced; border-radius: 999px; padding: 2px 10px; margin-top: 1px; }
+.biz-ctx-body { font-size: 12.6px; line-height: 1.6; color: #2c4a63; }
+.biz-ctx-body b { color: #2b6cb8; }
+
 .lane { position: absolute; left: 12px; width: calc(var(--page-w) - 24px); background: var(--c-lane); border-radius: 8px; }
-.lane-label { position: absolute; left: 20px; transform: translateY(-50%); padding: 3px 12px; border-radius: 999px; background: #fff; border: 1px solid var(--c-line); box-shadow: 0 1px 4px rgba(39,49,61,0.08); font-size: 12px; font-weight: 800; text-align: center; color: var(--c-ink); white-space: pre-line; z-index: 3; }
+.lane.tone-biz { background: #eef1f5; }
+.lane.tone-ai { background: #fdf5f0; }
+.lane.tone-base { background: #f2f3f5; }
+.lane-label { position: absolute; left: 20px; transform: translateY(-50%); padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--c-line); box-shadow: 0 1px 4px rgba(39,49,61,0.08); font-size: 12px; font-weight: 800; text-align: center; color: var(--c-ink); white-space: pre-line; z-index: 3; max-width: 100px; }
+/* 泳道注释：整条标签带宽度（=FLOW.LABEL_BAND 118），药丸下方独立文本框 */
+.lane-note-box { position: absolute; left: 12px; width: 118px; font-size: 10px; font-weight: 600; color: var(--c-gray); line-height: 1.38; text-align: center; z-index: 3; }
 .node { position: absolute; background: #fff; border: 1px solid var(--c-line-2); border-radius: 8px; padding: 10px 12px 8px; cursor: pointer; transition: 0.15s; z-index: 3; box-shadow: 0 1px 4px rgba(39,49,61,0.07); }
 .node:hover { border-color: var(--c-accent); box-shadow: 0 4px 14px rgba(255, 75, 22, 0.25); transform: translateY(-1px); }
 .node.sel { border: 2px solid var(--c-accent); background: var(--c-accent-soft); box-shadow: 0 4px 16px rgba(255, 75, 22, 0.3); }
@@ -120,7 +131,8 @@ h2 small { font-weight: 400; font-size: 12px; color: var(--c-gray); margin-left:
 .loopchip { position: absolute; font-size: 12px; font-weight: 700; color: var(--c-accent-dark); cursor: pointer; padding: 4px 10px; border-radius: 14px; border: 1.5px dashed var(--c-accent); background: var(--c-accent-soft); z-index: 4; }
 .loopchip:hover, .loopchip.sel { background: var(--c-accent-bg); }
 svg.arrows { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.lab { position: absolute; font-size: 12px; font-weight: 800; color: var(--c-accent-dark); z-index: 3; }
+/* 边标签：白底 halo 压线可读；z4 确保永不被节点卡片盖住 */
+.lab { position: absolute; font-size: 12px; font-weight: 800; color: var(--c-accent-dark); z-index: 4; background: rgba(255,255,255,0.92); border-radius: 5px; padding: 1px 6px; box-shadow: 0 0 0 3px rgba(255,255,255,0.55); }
 .lab.g { color: var(--c-gray); }
 .datasup { position: absolute; z-index: 4; left: 14px; bottom: 12px; font-size: 11.5px; color: var(--c-gray); background: rgba(255,255,255,0.85); border-radius: 6px; padding: 2px 8px; }
 .datasup b { color: var(--c-chip); }
@@ -199,6 +211,37 @@ svg.arrows { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .ba td.dim { font-weight: 800; color: var(--c-chip); white-space: nowrap; }
 .ba td.bf { color: var(--c-gray-2); }
 .ba td.af { color: var(--c-accent-dark); font-weight: 700; }
+
+/* ---------- 总分四段式：以前怎么做 / 为什么用 AI / 风险与规避 ---------- */
+.p-evolve { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.p-evolve-row { display: flex; align-items: flex-start; gap: 10px; border-radius: 8px; padding: 8px 12px; }
+.p-evolve-row.legacy { background: #f3f5f8; border: 1px solid #e2e6ec; }
+.p-evolve-row.why { background: #fdefe7; border: 1px solid var(--c-accent-border); }
+.p-evolve-row.human { background: #eef4fa; border: 1px solid #c9dced; }
+.p-evolve-tag { flex: none; font-size: 10.5px; font-weight: 800; border-radius: 999px; padding: 2px 9px; margin-top: 2px; }
+.p-evolve-row.legacy .p-evolve-tag { color: #6e7885; background: #fff; border: 1px solid #d5dae0; }
+.p-evolve-row.why .p-evolve-tag { color: var(--c-accent-dark); background: #fff; border: 1px solid var(--c-accent-border); }
+.p-evolve-row.human .p-evolve-tag { color: #2b6cb8; background: #fff; border: 1px solid #c9dced; }
+.p-evolve-row .txt { font-size: 12.6px; line-height: 1.58; color: #3d4754; }
+.p-evolve-row.legacy .txt { color: #6e7885; }
+.p-fallback { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; background: #fff8e6; border: 1px solid #eed9a0; border-left: 4px solid #d4a017; border-radius: 8px; padding: 8px 12px; }
+.p-fallback .p-evolve-tag { color: #8a6100; background: #fff; border: 1px solid #eed9a0; }
+.p-fallback .txt { font-size: 12.6px; line-height: 1.55; color: #5c4a12; }
+.p-metrics { margin-top: 12px; }
+.p-metrics table { width: 100%; border-collapse: collapse; font-size: 12.4px; }
+.p-metrics th { text-align: left; color: var(--c-gray); font-size: 11.5px; padding: 5px 8px; border-bottom: 1px solid #eef0f3; }
+.p-metrics td { padding: 6px 8px; border-bottom: 1px solid #f3f5f7; vertical-align: top; line-height: 1.5; }
+.p-metrics td.mk { color: #3d4754; font-weight: 600; }
+.p-metrics td.mv { color: #2f6b4f; font-weight: 700; }
+.p-trace { margin-top: 12px; border-top: 1px dashed var(--c-line-2); padding-top: 8px; }
+.p-trace-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.p-trace-chip { font-size: 11px; font-weight: 700; color: #44546a; background: #f0f2f6; border: 1px solid #dde2ea; border-radius: 999px; padding: 2px 10px; }
+.p-risks { margin-top: 12px; border-top: 1px dashed var(--c-line-2); padding-top: 8px; }
+.p-risks table { width: 100%; border-collapse: collapse; font-size: 12.4px; }
+.p-risks th { text-align: left; color: var(--c-gray); font-size: 11.5px; padding: 5px 8px; border-bottom: 1px solid #eef0f3; }
+.p-risks td { padding: 6px 8px; border-bottom: 1px solid #f3f5f7; vertical-align: top; line-height: 1.5; }
+.p-risks td.rk { color: #8a4a3a; }
+.p-risks td.gd { color: #2f6b4f; font-weight: 600; }
 
 /* ---------- 口径角标 ---------- */
 .approx { display: inline-block; font-size: 10px; font-weight: 800; color: var(--c-accent-dark); background: var(--c-accent-bg); border: 1px solid var(--c-accent-border); border-radius: 8px; padding: 0 6px; margin-left: 6px; vertical-align: 1px; }

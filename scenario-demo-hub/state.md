@@ -1,67 +1,42 @@
 # state · scenario-demo-hub
 
-> 快照时间：2026-10-03 23:25 CST ｜ 阶段：V1.3 合同蓝图「总索引 + 分层下钻」产品化（L1 总索引 / L2 泳道下钻 / L3 抽屉三层模型，根治大图节点挤压与跨层飞线）
+> 快照时间：2026-10-08 CST ｜ ADR-014：前期不部署本地大模型/GPU/vLLM——纯云端（LiteLLM）+脱敏网关，数据存储仍全内网 ｜ 阶段：V1.11 全站 UI 审查闭环 + 18% 错挂口径溯源上墙（任务P：判例进 S1 弹窗、推导进 metricNote、g01 拆开两个事实）
 
 ## 当前状态
-- 构建：`npm run build` → dist/index.html 单文件 444KB，file:// 双击即开
-- 校验：`npm run layout` ✓ ｜ `npm run validate` ✓ 3 份 ｜ `npx tsc --noEmit` ✓ ｜ `npx tsx scripts/rules.test.ts` 10/10 ✓
-- 浏览器实测：contract-blueprint L1（主链 7 步+6 泳道 24 pills 零飞线）→ L2（SUP/PM 下钻，同层边+跨端锚点分组跳转）→ L3 抽屉 → 返回总索引，全链路闭环 ✓；overall-flow 回归（FlowCanvas 14 nodes+bar / 0 bp-mode）无劣化 ✓
-- 场景配置：scenarios/contract-blueprint.json（drill:true + indexChain 主链七步，画布 1360×2167）+ scenarios/overall-flow.json（四层架构，画布 1360×1315）+ scenarios/attr-extraction.json
-- 蓝图唯一事实源：knowledge/product/和采商城产品与业务流程蓝图.md（六端 372 项：OP 129 / PM 50 / SHOP 93·11 模块 / SUP 40·8 模块 / AIP 31 / AICS 29）
-- platform 枚举：全景 / 商品 / 搜索 / 客服（各配识别色：墨 #27313d / 橙 #e24a10 / 蓝 #2b6cb8 / 绿 #2f9e6e）
+- 构建：`npm run build` → dist/index.html 591.83KB（gzip 188.12KB），file:// 双击即开
+- **任务O（canvas 外审查）全绿项**：首页 7 卡对齐无裁切可滚动；场景卡 3 列/约束卡 2 列混排对齐、story 零截断；对比区四卡等高零溢出；抽屉 560px/弹窗 920px z 序正确、遮罩关闭 ✓；修 2 bug：**Esc 双层同关**（抽屉 handler 让位 modalRef）与 **useScale 高度收拢亚像素裁切**（rect.height×s + ceil+2，页尾口径说明不再被切）
+- **任务N（canvas 审查）**：小地图适配即隐；反哺标签三级避障；泳道标签标题/注释解耦；悬停=聚光灯/选中=描边（加载不再整版灰）；biz-ctx 间距 14
+- **模型部署口径（ADR-014）**：前期纯云端（LiteLLM→GLM/Qwen/OpenAI）；C1=数据不出域而非算力私有化
+- **口径同步机制**：ai-platform-scaffold `docs/architecture/NARRATIVE_SYNC.md`（STATUS=实现事实唯一源）
+- 校验：layout ✓ 7 份 ｜ validate ✓ 7 份 0 警告 ｜ tsc ✓ ｜ rules.test 10/10 ✓
+- 场景配置 7 份（6 链式 + contract-blueprint ELK）
 
-## 页面架构（任务G 定稿）
-```
-HubHome  = hero（大标题+定位语+统计行）→ 平台分组（色点标题 + auto-fill minmax(300px,1fr) 卡片网格）→ 空组收敛"场景筹备中"
-ScenarioPage = topbar（fixed 52px 毛玻璃：←返回 ｜ 标题 ｜ 01痛点/02流程/03对比 锚点+scrollspy）
-             → section 01 whycards（场景/约束卡）→ section 02 画布（按 cfg.flow.drill 分支）→ section 03 CompareSection
-             → 点节点：右抽屉（fixed 560px/94vw）内嵌 DetailPanel，ESC/遮罩关闭保高亮
-画布分支：drill ? BlueprintCanvas : FlowCanvas（任务G，FlowCanvas 零改动）
-FlowCanvas v2 = .flow-vp(视口,overflow:clip) > .flow-world(translate+scale) + toolbar + minimap + datasup（全景单视图，适合 ≤15 节点）
-BlueprintCanvas = 双态：L1 总索引（bp-chain 主链胶囊①-⑦ + bp-lanes 六行 pill 横排，零飞线）
-                                L2 泳道下钻（bp-crumb 面包屑统计 + bp-stage 同层边 SVG + .node 复用 + bp-anchors 跨端协同锚点按对端泳道分组）
-                  L3 沿用页面右抽屉；laneOf(n)=n.laneIndex ?? 0 全消费处兜底
-```
+## 画布组件体系（任务N 定稿）
+- `src/flow/tokens.ts`：构建期+运行时唯一几何事实源（PAGE_WIDTH/LABEL_BAND=118/泳道间距/GRID_GAP/DEFAULT_H/MINIMAP/zoom）——改值必须重跑 `npm run layout`
+- `src/components/flow/`：LaneBand / NodeBox / EdgeLayer（标签 z4 halo 渲染在节点后）/ FlowToolbar / MiniMap（按需显隐）；FlowCanvas 只剩视口协调
+- 泳道标签：药丸=泳道名；note=`.lane-note-box` 整带宽 118px 置药丸下方——勿再塞药丸；标签带不可加宽（右缘=布线窄通道左界）
 
 ## 关键约定（改动前必读）
-1. **fixed/sticky 元素必须放 scale-outer 层**：scale-inner 有 transform，会劫持内部 fixed 坐标系并缩放（同 RefModal 先例）；顶栏让位用 `.scale-outer{margin-top:52px}`（margin 不进 useScale 的 outer 高度计算）
-2. **锚点滚动用物理坐标**：`el.getBoundingClientRect().top + window.scrollY - 60`，天然兼容 inner 缩放，无需换算
-3. **scrollspy 触底规则**：末段不足一屏时滚动被钳制、IO 观察带（-30%/-60%）仍被上一段占据 → nearBottom 判定（IO 回调 + scroll 监听双保险）强制高亮末段
-4. **三级文案模型**：chip 序号称谓 → badge 徽标短名（tag ?? name；约束取 kw）→ full 弹窗全称（fullTitle 可覆盖）
-5. **画布/面板文案分离**：盒内 title/sub/aip 宜短；面板全称走 panelTitle/panelAip
-6. **受限富文本**：配置文案仅允许 `<b>` 与 `<br>`（lib/rich.tsx 转义其余）
-7. **口径红线**：数字+量词才算指标；有数字必须口径词/approx/metricNote
-8. **零安装红线**：禁引入运行时请求；路由必须 hash；新依赖先看单文件构建体积——构建期工具库走 devDependency
-9. node.kind 六态：normal/highlight/dashed/diamond/bar/loopchip；边消费 auto-layout 回写的 route/labelAt/style
-10. **泳道=架构层**：overall-flow 泳道必须映射方案四层架构；调整连线布局改 auto-layout.ts 规则，**不手工改坐标**
-11. **视口画布防隐式滚动容器**（任务F 踩坑）：`.flow-vp` 内世界高度远超视口时，`overflow:hidden` 会使 vp 成为隐式原生滚动容器，浏览器滚动锚定/历史恢复改写 scrollTop 导致覆盖层绘制错位（布局对、绘制错）。已双保险：CSS `overflow:clip`（在前保留 hidden 作 fallback）+ FlowCanvas 在 [zoom,pan] 变化时强制 scrollTop/scrollLeft=0
-12. **aip 校验口径**：rules.ts 的 AIP_REF 仅对含 "AIP" 的串生效；纯 OP/PM/SHOP/SUP 编号天然豁免，合同编号走 solves.ref（S/C 开头）承载场景回溯
-13. **大图信息架构优先于几何**（任务G 定稿）：节点 >15 或跨层边占比高（蓝图 29/33）时，「单视图全量渲染」再怎么调布局/避障都救不了——用「总索引 + 分层下钻」改交互层级：L1 零飞线（顺序=主链编号，关系=泳道聚合），L2 只画同层边 + 跨层收拢为按对端泳道分组的锚点徽章；声明式开关 `flow.drill` + `flow.indexChain`，ScenarioPage 按 drill 分支，FlowCanvas 不动零回归
-14. **laneIndex 可空全兜底**：schema 中 laneIndex 为 optional，所有消费处必须走 `laneOf(n) = n.laneIndex ?? 0`（模块级辅助函数），否则 linter 报 number|undefined——laneNodes 分组 / inner-outer 边分类 / Map.set / setState / 锚点方向判定无一例外
-15. **L2 舞台坐标局部化**：泳道下钻视图 = 全局 route/坐标做线性变换（x+L2_DX 居中、y-泳道顶+L2_PAD_TOP），复用全局 .node theme class 保视觉一致；stage 高度=泳道高+64，右侧 200px 留给跨端锚点栏
-16. **自动化点击防顶栏遮挡**（任务G 踩坑）：页面 fixed 顶栏（z-80）会覆盖滚动后落在其下的可点元素，agent-browser 报 "covered by .tb-sec"——先 scroll 使目标脱离覆盖区再点；截图上传瞬时失败是 CDN 抖动，sleep 重读即可
+1. 链式布局：flow.chain（列=链位，跨泳道同列、同泳道+1，col 可覆盖）+ 非主链显式 col + row 分行；bar 独占行；loopchip 不撑列宽但受右边界检查
+2. 泳道 tone（biz/ai/base）；lane.note 走注释框渲染
+3. 编号口径：业务页 01~N 主链编号；AI 服务节点无编号用 aip 角标；域级编号写 panelAip
+4. 口径红线：数字+量词必须口径词（示意/约/≈/基线/SOW/实测/示例）或 approx——〔设计目标〕不是口径词
+5. 零安装红线：构建期工具走 devDependency；hash 路由；单文件体积盯紧
+6. fixed/sticky 放 scale-outer；scrollspy 触底双保险；三级文案模型；画布/面板文案分离（w117 节点 sub 每段 ≤8 字）
+7. 节点>15 或跨层边多 → drill 模式；视口画布 overflow:clip + scrollTop=0 双保险
+8. **Esc 单层关闭**：抽屉 handler 必须让位 RefModal（modalRef 开时 return）；**useScale 高度收拢用 rect.height×s+ceil+2**（勿回退 scrollHeight）
+9. 自动化点击防顶栏遮挡；截图瞬时失败重试；AI 视觉结论必须 DOM 实测交叉验证（fullPage 截图对 transform 页高度检测失灵——下半页会丢，改滚动定位+视口截图；箭头居中看字形勿看盒偏移）
 
-## 自动布局管线（任务D 定稿，F 复用）
-1. **ELK layered（每泳道独立，RIGHT 方向）**：只定位不喂边。无连边图 ELK 忽略所有间距参数（探针实证），故间距交给阶段2
-2. **remapLaneGrid**：泳道垂直堆叠，GRID_GAP=40 网格重排，predictNodeH 按文案回写节点高度
-3. **obstacle-router（libavoid）**：全部边一次性正交避障；shapeBuffer=10/nudge=12/segmentPenalty=10；含层名标签带虚拟障碍（左缘 -1000、右缘 x100，逼出 x≈113~120 窄通道）
-4. **标签定位**：最长水平段中点起 2px 步长双向滑动，节点盒按 LABEL_PAD=6 膨胀避障
-- elkjs/obstacle-router 均为 devDependency，仅构建期 tsx 运行，**不进 vite 产物**
-- contract-blueprint 画布 2167px 高经此管线自动布线（33 边），零手工坐标
-
-## 下一步候选（V1.4）
-- n6/n11/n12 等两行 sub 节点的 aip 角标轻微重叠修复（has-aip 节点最小高度约束，L2 与 FlowCanvas 共同受益）
-- L2 跨端锚点 tooltip 升级为点击弹明细小卡（当前 title 悬停，移动端不可用）
-- analytics.endpoint 埋点实现（Schema 已留口）
-- AIP registry.json 枚举校验（矩阵机读版）
-- 搜索中台/客服中台首批场景配置（auto-layout 已可复用：autoLayout:true 即自动布线）
-- 场景页导出图片/PDF（评审材料）
-- 画布触屏手势（touch-action:none 已就位，双指捏合待实现）
+## 下一步候选（V1.7）
+- overall-flow 的 a1~a7 补 legacy/whyAi/risks/metrics/fallback（七问拉齐到总页 AI 服务节点——任务O 已确认抽屉里这些区块缺席）
+- 搜索/客服页与 SOW 验收指标卡的 RTM 挂接（L2 功能点编号逐环对齐）
+- analytics 埋点；场景页导出图片/PDF
+- 其余 5 链式页同标准 UI 复测（任务N 已全量重算几何，未逐页目检非画布区）
 
 ## 活跃文件
-- src/schema/scenario.ts（领域模型唯一事实源）、src/schema/rules.ts（业务规则）
-- src/pages/HubHome.tsx（平台色+hero+自适应网格）、src/pages/ScenarioPage.tsx（顶栏+scrollspy+抽屉+drill 画布分支）
-- src/components/{FlowCanvas,BlueprintCanvas,DetailPanel,CompareSection,RefModal}.tsx、src/styles/theme.css
-- scripts/auto-layout.ts（四段自动布局管线）、scripts/{validate.ts,rules.test.ts}
-- scenarios/contract-blueprint.json、scenarios/overall-flow.json、scenarios/attr-extraction.json
-- knowledge/product/{和采商城产品与业务流程蓝图,商城AI需求追溯矩阵}.md、knowledge/frontend/{自动布局布线方案,页面布局与展示流程设计}.md
+- src/flow/tokens.ts（几何唯一源）
+- src/components/FlowCanvas.tsx（视口协调器）+ src/components/flow/{LaneBand,NodeBox,EdgeLayer,FlowToolbar,MiniMap}.tsx
+- src/components/{BlueprintCanvas,DetailPanel,RefModal,CompareSection}.tsx、src/pages/{HubHome,ScenarioPage}.tsx、src/lib/useScale.ts、src/styles/theme.css
+- scripts/auto-layout.ts（链式+ELK 双模式+三级标签避障）、scripts/{validate.ts,rules.test.ts}
+- scenarios/：overall-flow / data-governance / ai-data-platform / ai-search / ai-service / attr-extraction / contract-blueprint
+- knowledge/product/：总分建设结构 / AI商城从0到1业务蓝图 / 商城AI需求追溯矩阵 / 和采商城产品与业务流程蓝图

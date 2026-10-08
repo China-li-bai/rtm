@@ -5,6 +5,7 @@ import { DetailPanel } from "../components/DetailPanel";
 import { FlowCanvas } from "../components/FlowCanvas";
 import { RefModal } from "../components/RefModal";
 import { buildRefs } from "../lib/refs";
+import { rich } from "../lib/rich";
 import { useScale } from "../lib/useScale";
 import type { ScenarioConfig } from "../schema/scenario";
 
@@ -50,13 +51,17 @@ export function ScenarioPage({ cfg }: { cfg: ScenarioConfig }) {
     return () => { io.disconnect(); window.removeEventListener("scroll", onScroll); };
   }, []);
 
-  /** ESC 关抽屉 */
+  /** ESC 关抽屉——单层关闭：弹窗（RefModal）开着时本次 Esc 只归弹窗，抽屉不吃 */
   useEffect(() => {
     if (!drawerOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setDrawerOpen(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (modalRef) return;
+      setDrawerOpen(false);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [drawerOpen]);
+  }, [drawerOpen, modalRef]);
 
   /** 锚点跳转：物理坐标计算，天然兼容 inner 缩放 */
   const jump = (key: SectionKey) => {
@@ -135,6 +140,12 @@ export function ScenarioPage({ cfg }: { cfg: ScenarioConfig }) {
             <em>02</em>场景融合使用流程
             <small>实线橙＝业务主流程 ｜ 橙虚线＝反哺 · 兜底 ｜ 点击任一环节查看它解决的场景与解法</small>
           </h2>
+          {cfg.flow.bizContext && (
+            <div className="biz-ctx">
+              <span className="biz-ctx-tag">上级业务</span>
+              <span className="biz-ctx-body">{rich(cfg.flow.bizContext)}</span>
+            </div>
+          )}
           {cfg.flow.drill ? (
             <BlueprintCanvas flow={cfg.flow} selectedId={selectedId} onSelect={selectNode} />
           ) : (

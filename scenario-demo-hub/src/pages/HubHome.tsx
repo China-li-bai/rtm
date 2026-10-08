@@ -6,6 +6,7 @@ const PLATFORMS = [
   { key: "商品", label: "AI 商品中台", color: "#e24a10", bg: "#fdefe7", border: "#f5cbb5" },
   { key: "搜索", label: "AI 搜索中台", color: "#2b6cb8", bg: "#eaf2ff", border: "#c4daf5" },
   { key: "客服", label: "AI 客服中台", color: "#2f9e6e", bg: "#e8f6ef", border: "#bfe5d2" },
+  { key: "数据", label: "数据治理与 AI 数据中台", color: "#7c5cbf", bg: "#f1ecfa", border: "#d9cdf0" },
 ] as const;
 
 /** 场景中心：三中台分组卡片入口 */

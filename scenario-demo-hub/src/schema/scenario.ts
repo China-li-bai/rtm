@@ -60,6 +60,10 @@ export const constraintItemSchema = z.object({
 
 const laneSchema = z.object({
   label: z.string().min(1),
+  /** 泳道角色注（入口/出口/链路角色），渲染在泳道标签下方小字 */
+  note: z.string().optional(),
+  /** 泳道底色分区：biz=业务两端（灰蓝）/ ai=AI 中台（暖）/ base=底座（浅灰） */
+  tone: z.enum(["biz", "ai", "base"]).optional(),
   top: z.number(),
   height: z.number().positive(),
 });
@@ -107,12 +111,33 @@ export const flowNodeSchema = z.object({
    * 仅 autoLayout 场景使用：构建期据此赋 partition，避免靠坐标推断导致不幂等。
    */
   laneIndex: z.number().int().min(0).optional(),
+  /**
+   * 列序号（链式布局）：主链节点由 chain 顺序推导（跨泳道保持同列形成竖向
+   * 衔接），非主链节点（如底座 pills）必须显式声明。
+   */
+  col: z.number().int().min(0).optional(),
+  /** 泳道内行号（链式布局，默认 0；底座「横条 + pills 两行」用 row:1） */
+  row: z.number().int().min(0).optional(),
   x: z.number(),
   y: z.number(),
   w: z.number().positive(),
   h: z.number().positive().optional(),
   /** 解决的场景/约束（防孤儿环节：rules 层校验 ≥1） */
   solves: z.array(solveSchema).default([]),
+  /** 以前怎么做——人工/规则时代的做法与瓶颈（七问之一） */
+  legacy: z.string().optional(),
+  /** 为什么用 AI——旧做法不可替代的痛点（七问之二） */
+  whyAi: z.string().optional(),
+  /** 人机分工——这一环人的角色变成什么（七问之四，对齐 PAIR automation↔augmentation） */
+  humanRole: z.string().optional(),
+  /** 风险与规避（七问之五）：每条风险必须给出对应规避手段 */
+  risks: z.array(z.object({ risk: z.string().min(1), guard: z.string().min(1) })).optional(),
+  /** 失败降级——AI 不可用/低置信/超时时的系统行为（七问之六，graceful failure） */
+  fallback: z.string().optional(),
+  /** 成效与验收（七问之七）：指标名 + 目标值/实测值（成本类指标同入此处） */
+  metrics: z.array(z.object({ m: z.string().min(1), v: z.string().min(1) })).optional(),
+  /** 追溯链 chips：能力编号 → 技术组件 → 技术锚点（对齐 model.yaml RTM，反向即「被服务」） */
+  trace: z.array(z.string().min(1)).optional(),
   /** AI 做了什么（技术黑盒：讲谁的痛怎么解，不写实现）。允许受限 HTML：<b> */
   ai: z.string().min(1, "环节必须答得出「AI 做了什么」"),
   /** 业务流程步骤 */
@@ -162,6 +187,19 @@ const flowSchema = z.object({
   drill: z.boolean().optional(),
   /** L1 主链阶段顺序（节点 id 数组，7 步以内）；仅 drill 模式使用 */
   indexChain: z.array(z.string()).optional(),
+  /**
+   * 链式布局主链（节点 id 数组，按业务推进顺序）：声明后构建期按
+   * 「列=链位、跨泳道保持同列」的确定性规则布局——业务主链从左到右
+   * 蛇形推进、跨泳道竖向衔接天然对齐（对齐 RTM 泳道全景口径）。
+   */
+  chain: z.array(z.string()).optional(),
+  /** 画布视口高度（设计像素）：世界高于视口才需平移；设为略高于世界高可整幅直出 */
+  viewH: z.number().positive().optional(),
+  /**
+   * 上级业务上下文（红线：每个 AI 流程页必须答得出「服务于哪条上级业务」）：
+   * 渲染在画布上方的定向条，说明本页流水线挂在哪条业务链的哪些环节
+   */
+  bizContext: z.string().optional(),
   /** 数据支撑条（流程图底部一行） */
   dataSupport: z.string().optional(),
   /** 页面打开时默认选中的环节 id */
@@ -181,7 +219,7 @@ export const scenarioConfigSchema = z.object({
   id: z
     .string()
     .regex(/^[a-z0-9-]+$/, "场景 id 须为 kebab-case，将用于 URL"),
-  platform: z.enum(["全景", "商品", "搜索", "客服"]),
+  platform: z.enum(["全景", "商品", "搜索", "客服", "数据"]),
   title: z.string().min(1),
   /** 页面副标题引导语 */
   subtitle: z.string().optional(),
