@@ -1,6 +1,6 @@
 # state · scenario-demo-hub
 
-> 快照时间：2026-10-08 CST ｜ ADR-014：前期不部署本地大模型/GPU/vLLM——纯云端（LiteLLM）+脱敏网关，数据存储仍全内网 ｜ 阶段：V1.11 全站 UI 审查闭环 + 18% 错挂口径溯源上墙（任务P：判例进 S1 弹窗、推导进 metricNote、g01 拆开两个事实）
+> 快照时间：2026-10-08 CST（三段） ｜ ADR-014：前期不部署本地大模型/GPU/vLLM——纯云端（LiteLLM）+脱敏网关，数据存储仍全内网 ｜ 阶段：V1.13 口径与文案治理收官——P（18% 溯源）+Q（可幻觉/C1 歧义）+R（contract-blueprint 按 ADR-014 重述：n23→模型网关·云端按次，SOW 双路径保留为引用）
 
 ## 当前状态
 - 构建：`npm run build` → dist/index.html 591.83KB（gzip 188.12KB），file:// 双击即开

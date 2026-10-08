@@ -24,6 +24,8 @@ export function HubHome() {
 
       {PLATFORMS.map((p) => {
         const list = scenarios.filter((s) => s.platform === p.key);
+        console.log({list});
+        
         return (
           <section className="hub-group" key={p.key}>
             <h2>
