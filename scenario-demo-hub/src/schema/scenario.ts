@@ -83,10 +83,16 @@ const beforeAfterSchema = z.object({
   approx: z.boolean().optional(),
 });
 
+/**
+ * 节点形态。boundary 与 dashed 语义必须区分：
+ *   dashed   = 尚未补齐的占位（待做）
+ *   boundary = 刻意排除的能力位（不做，需在抽屉讲清理由）——斜纹＋深灰实线，借工程图「保留区」惯例
+ */
 const nodeKindSchema = z.enum([
   "normal",
   "highlight",
   "dashed",
+  "boundary",
   "diamond",
   "bar",
   "loopchip",

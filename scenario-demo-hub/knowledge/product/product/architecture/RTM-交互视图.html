@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>架构缩放图 · 保利和采商城 AI 专项（C4 式三级）</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; background:#f5f6f8; color:#333; overflow-x:hidden; }
+  header { background:#44546A; color:#fff; padding:10px 22px; position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:14px; }
+  header h1 { font-size:16px; font-weight:600; }
+  #crumb { font-size:12.5px; color:#cfd6df; flex:1; }
+  #crumb b { color:#FC773F; }
+  #crumb span.sep { margin:0 6px; color:#7c8794; }
+  #crumb span.lvl { cursor:pointer; }
+  #crumb span.lvl:hover { text-decoration:underline; }
+  header input { border:none; border-radius:6px; padding:5px 10px; font-size:12px; width:170px; }
+  header button { border:none; border-radius:6px; padding:5px 12px; font-size:12px; cursor:pointer; background:#FC773F; color:#fff; }
+  header button.ghost { background:rgba(255,255,255,.14); }
+  #stage { transition:opacity .18s; }
+  .hint { font-size:11.5px; color:#98a0aa; text-align:center; padding:8px; }
+  .svgbox { display:flex; justify-content:center; padding:6px 0 2px; }
+  svg text { font-family:inherit; }
+
+  /* L3 组件卡片 */
+  #l3 { padding:16px 26px 40px; display:none; }
+  .plat-head { display:flex; align-items:baseline; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .plat-head h2 { font-size:19px; color:#D95F2B; }
+  .plat-head .scen { font-size:12px; color:#666; }
+  .plat-head .scen b { background:#F2F3F5; border-radius:10px; padding:2px 9px; margin-right:5px; font-weight:500; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:12px; }
+  .comp { background:#fff; border:1px solid #e8e8ed; border-radius:12px; padding:13px 15px; }
+  .comp h3 { font-size:14.5px; margin-bottom:2px; }
+  .comp h3 .cid { color:#8a94a6; font-weight:600; margin-right:6px; font-size:12.5px; }
+  .comp .caps { margin:7px 0; }
+  .comp .caps span { display:inline-block; font-size:11px; background:#FDEFE7; color:#D95F2B; border-radius:9px; padding:2px 8px; margin:2px 4px 2px 0; }
+  .comp .tech { font-size:11.5px; color:#767171; line-height:1.6; }
+  .comp .tech b { color:#44546A; }
+  .comp .foot { margin-top:8px; font-size:11.5px; color:#98a0aa; display:flex; justify-content:space-between; }
+  .comp .foot a { color:#0a6ebd; text-decoration:none; }
+  .comp.legacy { background:#fafafa; }
+  .comp.legacy h3:after { content:"存量卡"; font-size:10px; color:#98a0aa; border:1px solid #ddd; border-radius:6px; padding:1px 5px; margin-left:7px; vertical-align:2px; }
+  .comp mark { background:#ffe9d6; border-radius:3px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>架构缩放图</h1>
+  <div id="crumb"></div>
+  <input id="q" placeholder="搜索 编号/名称/锚点…"/>
+  <button class="ghost" onclick="go(1)">L1 全景</button>
+  <button onclick="go(1)">重置</button>
+</header>
+<div id="stage"></div>
+<div class="hint" id="hint">C4 式三级缩放：L1 系统上下文（业务全景）→ 点击中央系统进入 L2 容器（三大中台+底座）→ 点击中台进入 L3 组件（PRD 卡与锚点）。Esc 返回上一级。</div>
+<div id="l3"></div>
+
+<script>
+const DATA = {"scenarios": {"S-01": {"name": "供应商推品上架", "goal": "推品合规、快速进入标准商品池"}, "S-02": {"name": "自然语言找货下单", "goal": "说人话就能找到货并下单"}, "S-03": {"name": "关键词搜索比选", "goal": "关键词找货、筛选比选锁定目标"}, "S-04": {"name": "客服咨询即答", "goal": "商品/订单/FAQ 秒级可溯源回答"}, "S-05": {"name": "售后与转人工", "goal": "投诉纠纷有人接、夜间不丢件"}, "S-06": {"name": "集采专区合规采买", "goal": "集采行为全程规则管控"}, "S-07": {"name": "存量商品清洗治理", "goal": "存量数据达到上架标准"}, "S-08": {"name": "数据飞轮持续优化", "goal": "行为与坏案例回流让三家越用越强"}, "S-09": {"name": "审核运营与供应商协同", "goal": "驳回有原因、反馈有闭环、质量可度量"}, "S-10": {"name": "客服运营管理", "goal": "量、质、风险可管理可汇报"}}, "rows": [{"cap": "AIP-001-002", "name": "商品库管理", "scenarios": ["S-01", "S-07"], "comp": "COMP-01", "card": "01-prd/商品中台/AIP-001-002-商品库管理.md", "tech": ["gov_product 治理三态", "product_listing staging", "DDL 顺序迁移体系", "导入对账 fail-loud"], "fr": 8, "ac": 7, "legacy": false}, {"cap": "AIP-003-004", "name": "类目治理", "scenarios": ["S-01", "S-07"], "comp": "COMP-02", "card": "../类目治理智能体产品文档.md", "tech": ["gov_category_tree poly 6495叶", "taxonomy_event 户口本", "类目预测端点 auto 80.4%"], "fr": null, "ac": null, "legacy": "true"}, {"cap": "AIP-005-006", "name": "属性治理", "scenarios": ["S-01", "S-07"], "comp": "COMP-03", "card": "../ATTRIBUTE_EXTRACTION_PRD.md", "tech": ["category_attribute_schema", "extract-attributes 端点", "std_title 176074 全量"], "fr": null, "ac": null, "legacy": "true"}, {"cap": "AIP-007", "name": "商品图文审核", "scenarios": ["S-01", "S-09"], "comp": "COMP-04", "card": "01-prd/商品中台/AIP-007-商品图文审核.md", "tech": ["commit 端点违禁 409", "product_review_log", "审核队列/agent-review-batch", "人审工作台 resolve", "违禁词库(待建 P0)"], "fr": 9, "ac": 11, "legacy": false}, {"cap": "AIP-008", "name": "描述规范性校验", "scenarios": ["S-01", "S-07"], "comp": "COMP-05", "card": "01-prd/商品中台/AIP-008-描述规范性校验.md", "tech": ["norm_rule 规则配置", "品牌归一 13128", "std_title 归一规则", "TCCC 阈值校准先例"], "fr": 8, "ac": 7, "legacy": false}, {"cap": "AIP-009", "name": "审核结果分类展示", "scenarios": ["S-01", "S-09"], "comp": "COMP-04", "card": "01-prd/商品中台/AIP-007-商品图文审核.md", "tech": ["commit 端点违禁 409", "product_review_log", "审核队列/agent-review-batch", "人审工作台 resolve", "违禁词库(待建 P0)"], "fr": 9, "ac": 11, "legacy": false}, {"cap": "AIP-010", "name": "同款精确匹配", "scenarios": ["S-01", "S-03", "S-07"], "comp": "COMP-06", "card": "01-prd/商品中台/AIP-010-同款精确匹配.md", "tech": ["ES 同款簇", "commit 同款门禁实测拦截6件", "std_title 向量"], "fr": 7, "ac": 8, "legacy": false}, {"cap": "AIP-011", "name": "SEO 标题生成", "scenarios": ["S-01", "S-03"], "comp": "COMP-07", "card": "01-prd/商品中台/AIP-011-SEO标题生成.md", "tech": ["std_title 资产", "属性 Schema 约束", "LiteLLM 网关"], "fr": 7, "ac": 7, "legacy": false}, {"cap": "AIP-012", "name": "属性自动提取", "scenarios": ["S-01", "S-07"], "comp": "COMP-03", "card": "../ATTRIBUTE_EXTRACTION_PRD.md", "tech": ["category_attribute_schema", "extract-attributes 端点", "std_title 176074 全量"], "fr": null, "ac": null, "legacy": "true"}, {"cap": "AIP-013", "name": "属性合理性检测", "scenarios": ["S-01", "S-07"], "comp": "COMP-05", "card": "01-prd/商品中台/AIP-008-描述规范性校验.md", "tech": ["norm_rule 规则配置", "品牌归一 13128", "std_title 归一规则", "TCCC 阈值校准先例"], "fr": 8, "ac": 7, "legacy": false}, {"cap": "AIP-014", "name": "集采合规管控", "scenarios": ["S-06"], "comp": "COMP-08", "card": "01-prd/商品中台/AIP-014-集采合规管控.md", "tech": ["zen-engine 规则引擎", "handoff fail-safe 判例", "rule_eval_log(待建)"], "fr": 7, "ac": 7, "legacy": false}, {"cap": "AIP-015", "name": "智能分词与语义理解", "scenarios": ["S-02", "S-03"], "comp": "COMP-09", "card": "01-prd/搜索中台/AIP-015-语义检索与Query理解.md", "tech": ["ES synonym_graph 热更新", "Milvus 176074 向量", "SXJG→三雄极光 实测", "search_log(待建 P1)"], "fr": 6, "ac": 7, "legacy": false}, {"cap": "AIP-016-017", "name": "输入补全与智能纠错", "scenarios": ["S-03"], "comp": "COMP-10", "card": "01-prd/搜索中台/AIP-016-017-输入补全与智能纠错.md", "tech": ["gov_synonym poly 重锚定 2124", "ES suggester(待接)", "搜索日志(待建 P1)"], "fr": 6, "ac": 7, "legacy": false}, {"cap": "AIP-018-020", "name": "类目品牌筛选与属性聚合", "scenarios": ["S-03"], "comp": "COMP-11", "card": "01-prd/搜索中台/AIP-018-020-筛选面板与属性聚合.md", "tech": ["gov_category_tree 6495叶", "品牌归一 13128", "category_attribute_schema(重建中)"], "fr": 8, "ac": 8, "legacy": false}, {"cap": "AIP-021", "name": "多维度排序", "scenarios": ["S-03", "S-08"], "comp": "COMP-12", "card": "01-prd/搜索中台/AIP-021-多维排序.md", "tech": ["QP 双路融合", "历史订单 gold 192万行", "GrowthBook A/B", "曝光日志(待建)"], "fr": 9, "ac": 8, "legacy": false}, {"cap": "AIP-022-023", "name": "类目与品牌自动推荐", "scenarios": ["S-03", "S-08"], "comp": "COMP-13", "card": "01-prd/搜索中台/AIP-022-023-类目品牌推荐.md", "tech": ["predict-category 端点 @1=62.7%", "品牌归一 13128"], "fr": 7, "ac": 8, "legacy": false}, {"cap": "AIP-024-028", "name": "AI 对话导购", "scenarios": ["S-02"], "comp": "COMP-14", "card": "01-prd/搜索中台/AIP-024-028-AI对话导购.md", "tech": ["采购解析 MVP-1 1.1s", "推荐出口 MVP-2 2.4s", "portal 转发路由"], "fr": 6, "ac": 9, "legacy": false}, {"cap": "AIP-029-031", "name": "AI 猜你喜欢", "scenarios": ["S-02", "S-03", "S-08"], "comp": "COMP-15", "card": "01-prd/搜索中台/AIP-029-031-AI猜你喜欢.md", "tech": ["past_orders gold 星型 dim_product 40万", "双路检索"], "fr": 8, "ac": 8, "legacy": false}, {"cap": "AICS-001-009", "name": "在线客服底座", "scenarios": ["S-04", "S-05"], "comp": "COMP-16", "card": "01-prd/客服中台/AICS-001-009-双通道在线客服底座.md", "tech": ["Chatwoot v4.17.1 ADR-001", "webhook 适配器 ADR-008", "portal #/kb", "widget demo 8005"], "fr": 10, "ac": 10, "legacy": false}, {"cap": "AICS-010-015", "name": "人工接待", "scenarios": ["S-05", "S-04"], "comp": "COMP-17", "card": "01-prd/客服中台/AICS-010-015-人工接待.md", "tech": ["Chatwoot 坐席台", "conv6 四动作实测", "回复建议引擎 :8003 909ms"], "fr": 6, "ac": 9, "legacy": false}, {"cap": "AICS-016-017", "name": "意图识别与转接", "scenarios": ["S-04", "S-05"], "comp": "COMP-18", "card": "01-prd/客服中台/AICS-016-025-智能体接待.md", "tech": ["faq_kb 35条 命中0.911", "handoff 硬规则修复", "conv7 多轮实测", "chatwoot_sync 6秒"], "fr": 10, "ac": 12, "legacy": false}, {"cap": "AICS-018-019", "name": "智能体业务应答", "scenarios": ["S-04"], "comp": "COMP-18", "card": "01-prd/客服中台/AICS-016-025-智能体接待.md", "tech": ["faq_kb 35条 命中0.911", "handoff 硬规则修复", "conv7 多轮实测", "chatwoot_sync 6秒"], "fr": 10, "ac": 12, "legacy": false}, {"cap": "AICS-020-023", "name": "知识库管理", "scenarios": ["S-04", "S-08"], "comp": "COMP-18", "card": "01-prd/客服中台/AICS-016-025-智能体接待.md", "tech": ["faq_kb 35条 命中0.911", "handoff 硬规则修复", "conv7 多轮实测", "chatwoot_sync 6秒"], "fr": 10, "ac": 12, "legacy": false}, {"cap": "AICS-024-025", "name": "智能客服维护", "scenarios": ["S-10"], "comp": "COMP-18", "card": "01-prd/客服中台/AICS-016-025-智能体接待.md", "tech": ["faq_kb 35条 命中0.911", "handoff 硬规则修复", "conv7 多轮实测", "chatwoot_sync 6秒"], "fr": 10, "ac": 12, "legacy": false}, {"cap": "AICS-026-028", "name": "基础设置", "scenarios": ["S-10"], "comp": "COMP-19", "card": "01-prd/客服中台/AICS-026-029-基础设置与报表.md", "tech": ["平台控制面 DQ/评测/口径三注册表", "portal 体检页", "报表物化(待建)"], "fr": 6, "ac": 9, "legacy": false}, {"cap": "AICS-029", "name": "报表分析", "scenarios": ["S-10"], "comp": "COMP-19", "card": "01-prd/客服中台/AICS-026-029-基础设置与报表.md", "tech": ["平台控制面 DQ/评测/口径三注册表", "portal 体检页", "报表物化(待建)"], "fr": 6, "ac": 9, "legacy": false}], "components": {"COMP-01": {"card": "01-prd/商品中台/AIP-001-002-商品库管理.md", "legacy": false}, "COMP-02": {"card": "../类目治理智能体产品文档.md", "legacy": true}, "COMP-03": {"card": "../ATTRIBUTE_EXTRACTION_PRD.md", "legacy": true}, "COMP-04": {"card": "01-prd/商品中台/AIP-007-商品图文审核.md", "legacy": false}, "COMP-05": {"card": "01-prd/商品中台/AIP-008-描述规范性校验.md", "legacy": false}, "COMP-06": {"card": "01-prd/商品中台/AIP-010-同款精确匹配.md", "legacy": false}, "COMP-07": {"card": "01-prd/商品中台/AIP-011-SEO标题生成.md", "legacy": false}, "COMP-08": {"card": "01-prd/商品中台/AIP-014-集采合规管控.md", "legacy": false}, "COMP-09": {"card": "01-prd/搜索中台/AIP-015-语义检索与Query理解.md", "legacy": false}, "COMP-10": {"card": "01-prd/搜索中台/AIP-016-017-输入补全与智能纠错.md", "legacy": false}, "COMP-11": {"card": "01-prd/搜索中台/AIP-018-020-筛选面板与属性聚合.md", "legacy": false}, "COMP-12": {"card": "01-prd/搜索中台/AIP-021-多维排序.md", "legacy": false}, "COMP-13": {"card": "01-prd/搜索中台/AIP-022-023-类目品牌推荐.md", "legacy": false}, "COMP-14": {"card": "01-prd/搜索中台/AIP-024-028-AI对话导购.md", "legacy": false}, "COMP-15": {"card": "01-prd/搜索中台/AIP-029-031-AI猜你喜欢.md", "legacy": false}, "COMP-16": {"card": "01-prd/客服中台/AICS-001-009-双通道在线客服底座.md", "legacy": false}, "COMP-17": {"card": "01-prd/客服中台/AICS-010-015-人工接待.md", "legacy": false}, "COMP-18": {"card": "01-prd/客服中台/AICS-016-025-智能体接待.md", "legacy": false}, "COMP-19": {"card": "01-prd/客服中台/AICS-026-029-基础设置与报表.md", "legacy": false}}};
+const $ = id => document.getElementById(id);
+let level = 1, focus = null, kw = '';
+
+/* ---------- 归属推导：能力→中台 ---------- */
+function capPlatform(cap){
+  const m = cap.match(/^(AIP|AICS)-(\d+)/);
+  if(!m) return '商品';
+  if(m[1]==='AICS') return '客服';
+  return parseInt(m[2]) <= 14 ? '商品' : '搜索';
+}
+function compPlatform(compId){
+  const caps = DATA.rows.filter(r=>r.comp===compId);
+  const cnt = {};
+  caps.forEach(r=>{ const p = capPlatform(r.cap); cnt[p]=(cnt[p]||0)+1; });
+  return Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][0];
+}
+const PLATS = ['商品','搜索','客服'];
+const PCOLOR = { '商品':'#FC773F', '搜索':'#D95F2B', '客服':'#44546A' };
+const PNAME  = { '商品':'AI 商品中台','搜索':'AI 搜索中台','客服':'AI 客服中台' };
+
+function platStats(p){
+  const rows = DATA.rows.filter(r=>capPlatform(r.cap)===p);
+  const comps = [...new Set(rows.map(r=>r.comp))];
+  const acs = rows.reduce((a,r)=>a+(r.ac||0),0);
+  let n=0; rows.forEach(r=>{ const m=r.cap.match(/^(AIP|AICS)-(\d+)(?:-(\d+))?$/); if(m) n += m[3]? parseInt(m[3])-parseInt(m[2])+1 : 1; });
+  return { rows, comps, acs, n };
+}
+
+/* ---------- L1 系统上下文（SVG） ---------- */
+function l1(){
+  const plats = PLATS.map((p,i)=>`
+    <rect x="432" y="${150+i*62}" width="296" height="48" rx="8" fill="${i==2?'#EDF0F4':'#FDEFE7'}" stroke="${PCOLOR[p]}" stroke-width="1.5" style="cursor:pointer" onclick="go(3,'${p}')"/>
+    <text x="448" y="${170+i*62}" font-size="14" font-weight="600" fill="${PCOLOR[p]}">${PNAME[p]}</text>
+    <text x="448" y="${188+i*62}" font-size="10.5" fill="#8a94a6">${(()=>{const s=platStats(p);return s.n+' 项能力 · '+s.comps.length+' 组件 · '+s.acs+' 用例';})()}</text>`).join('');
+  const flows = [
+    'M258,120 C320,120 350,150 428,168', 'M258,205 C320,205 350,205 428,205', 'M258,290 C320,290 350,260 428,242',
+    'M732,150 C800,150 830,150 896,138', 'M732,232 C800,232 830,232 896,225', 'M896,320 C830,320 800,290 732,262'
+  ];
+  return `<svg viewBox="0 0 1150 560" width="96%" style="max-width:1150px">
+    <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8a94a6"/></marker>
+    <marker id="aro" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#FC773F"/></marker></defs>
+    <text x="575" y="34" font-size="16" font-weight="700" fill="#333" text-anchor="middle">L1 · 系统上下文 —— 一眼看清：谁把货推进来，谁把货找出去，谁来守护服务</text>
+    ${['京东商品 API','震坤行 ZKH','集采供应商目录'].map((t,i)=>`
+      <rect x="58" y="${100+i*85}" width="200" height="56" rx="10" fill="#fff" stroke="#44546A" stroke-width="1.6"/>
+      <text x="158" y="${125+i*85}" font-size="13" font-weight="600" fill="#2c3e50" text-anchor="middle">${t}</text>
+      <text x="158" y="${143+i*85}" font-size="10" fill="#98a0aa" text-anchor="middle">供应商侧</text>`).join('')}
+    <rect x="412" y="118" width="336" height="248" rx="14" fill="#fff" stroke="#FC773F" stroke-width="2.4" style="cursor:pointer" onclick="go(2)"/>
+    <text x="580" y="112" font-size="13.5" font-weight="700" fill="#D95F2B" text-anchor="middle">保利和采商城 · AI 专项（点击进入 L2）</text>
+    ${plats}
+    <rect x="432" y="306" width="296" height="40" rx="8" fill="#F2F3F5" stroke="#c9ccd1"/>
+    <text x="580" y="331" font-size="11.5" fill="#666" text-anchor="middle">公共底座：数据中台 · 模型中台 · 规则引擎 · 评测平台</text>
+    ${['采购人员（找货·下单）','采购单位（预算·审批）','供应商 / 客户（咨询）'].map((t,i)=>`
+      <rect x="896" y="${108+i*88}" width="196" height="58" rx="10" fill="#fff" stroke="#44546A" stroke-width="1.6"/>
+      <text x="994" y="${134+i*88}" font-size="12.5" font-weight="600" fill="#2c3e50" text-anchor="middle">${t.split('（')[0]}</text>
+      <text x="994" y="${152+i*88}" font-size="10" fill="#98a0aa" text-anchor="middle">${t.includes('（')?'（'+t.split('（')[1]:'采购侧'}</text>`).join('')}
+    <path d="${flows[0]}" fill="none" stroke="#8a94a6" stroke-width="1.6" marker-end="url(#ar)"/>
+    <path d="${flows[1]}" fill="none" stroke="#8a94a6" stroke-width="1.6" marker-end="url(#ar)"/>
+    <path d="${flows[2]}" fill="none" stroke="#8a94a6" stroke-width="1.6" marker-end="url(#ar)"/>
+    <path d="${flows[3]}" fill="none" stroke="#FC773F" stroke-width="1.8" marker-end="url(#aro)"/>
+    <path d="${flows[4]}" fill="none" stroke="#FC773F" stroke-width="1.8" marker-end="url(#aro)"/>
+    <path d="${flows[5]}" fill="none" stroke="#8a94a6" stroke-width="1.6" stroke-dasharray="5,4" marker-end="url(#ar)"/>
+    <text x="320" y="158" font-size="10.5" fill="#767171">推品</text>
+    <text x="322" y="196" font-size="10.5" fill="#767171">推品</text>
+    <text x="318" y="268" font-size="10.5" fill="#767171">目录导入</text>
+    <text x="770" y="140" font-size="10.5" fill="#D95F2B">检索·推荐</text>
+    <text x="766" y="218" font-size="10.5" fill="#D95F2B">下单·结算</text>
+    <text x="762" y="306" font-size="10.5" fill="#767171">咨询·售后</text>
+    <path d="M994,166 C900,420 700,430 580,352" fill="none" stroke="#c9ccd1" stroke-width="1.5" stroke-dasharray="4,4"/>
+    <text x="820" y="418" font-size="10" fill="#98a0aa">行为与坏案例回流（飞轮）</text>
+  </svg>`;
+}
+
+/* ---------- L2 容器（SVG） ---------- */
+function l2(){
+  const boxes = PLATS.map((p,i)=>{
+    const s = platStats(p), x = 70 + i*355;
+    return `
+    <rect x="${x}" y="96" width="315" height="130" rx="12" fill="#fff" stroke="${PCOLOR[p]}" stroke-width="2.2" style="cursor:pointer" onclick="go(3,'${p}')"/>
+    <text x="${x+18}" y="126" font-size="15.5" font-weight="700" fill="${PCOLOR[p]}">${PNAME[p]}</text>
+    <text x="${x+18}" y="148" font-size="11" fill="#767171">链路角色：${['上游 · 把货变标准','下游 · 让人找到货','贯穿 · 守护成交'][i]}</text>
+    <rect x="${x+18}" y="162" width="120" height="24" rx="12" fill="#FDEFE7"/><text x="${x+78}" y="178" font-size="11" fill="#D95F2B" text-anchor="middle">${s.n} 项能力</text>
+    <rect x="${x+148}" y="162" width="110" height="24" rx="12" fill="#F2F3F5"/><text x="${x+203}" y="178" font-size="11" fill="#666" text-anchor="middle">${s.comps.length} 组件</text>
+    <rect x="${x+268}" y="162" width="30" height="24" rx="12" fill="#EDF0F4"/><text x="${x+283}" y="178" font-size="11" fill="#44546A" text-anchor="middle">${s.acs}✓</text>
+    <text x="${x+18}" y="210" font-size="10" fill="#98a0aa">点击进入 L3 组件 →</text>`;
+  }).join('');
+  const base = ['数据中台','模型中台','规则引擎','评测平台'].map((t,i)=>`
+    <rect x="${70+i*270}" y="300" width="240" height="44" rx="9" fill="#F2F3F5" stroke="#c9ccd1"/>
+    <text x="${190+i*270}" y="327" font-size="12" fill="#555" text-anchor="middle">${t}</text>`).join('');
+  const infra = ['PostgreSQL 主数据','Elasticsearch 检索','Milvus 向量','LiteLLM 模型网关'].map((t,i)=>`
+    <rect x="${70+i*270}" y="388" width="240" height="40" rx="9" fill="#fff" stroke="#d8dce2" stroke-dasharray="4,3"/>
+    <text x="${190+i*270}" y="413" font-size="11" fill="#98a0aa" text-anchor="middle">${t}</text>`).join('');
+  return `<svg viewBox="0 0 1150 500" width="96%" style="max-width:1150px">
+    <defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8a94a6"/></marker>
+    <marker id="aro2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#FC773F"/></marker></defs>
+    <text x="575" y="34" font-size="16" font-weight="700" fill="#333" text-anchor="middle">L2 · 容器 —— 三大中台 + 公共底座 + 基础设施（点击中台进入 L3）</text>
+    ${boxes}
+    <path d="M425,150 L528,150" fill="none" stroke="#FC773F" stroke-width="2" marker-end="url(#aro2)"/>
+    <text x="477" y="140" font-size="10.5" fill="#D95F2B" text-anchor="middle">标准商品池</text>
+    <path d="M840,196 C760,240 560,240 445,212" fill="none" stroke="#8a94a6" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#ar2)"/>
+    <path d="M840,212 C790,250 560,250 445,220" fill="none" stroke="#8a94a6" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#ar2)"/>
+    <text x="645" y="252" font-size="10" fill="#98a0aa">坏案例 / 行为日志回流</text>
+    ${base}
+    ${PLATS.map((p,i)=>`<path d="M${227+i*355},226 L${190+i*270},300" fill="none" stroke="#c9ccd1" stroke-width="1.4" stroke-dasharray="3,3"/>`).join('')}
+    <text x="575" y="288" font-size="10" fill="#98a0aa" text-anchor="middle">一次建设 · 三台复用</text>
+    ${infra}
+    <path d="M190,344 L190,388 M460,344 L460,388 M730,344 L730,388 M1000,344 L1000,388" stroke="#e3e6ea" stroke-width="1.2"/>
+  </svg>`;
+}
+
+/* ---------- L3 组件卡片 ---------- */
+function hl(t){
+  if(!kw) return t;
+  const i = t.toLowerCase().indexOf(kw);
+  if(i<0) return t;
+  return t.slice(0,i)+'<mark>'+t.slice(i,i+kw.length)+'</mark>'+t.slice(i+kw.length);
+}
+function l3(p){
+  const s = platStats(p);
+  const scens = [...new Set(s.rows.flatMap(r=>r.scenarios))];
+  const compIds = [...new Set(s.rows.map(r=>r.comp))];
+  const cards = compIds.map(cid=>{
+    const rows = DATA.rows.filter(r=>r.comp===cid);
+    const c = DATA.components[cid];
+    const tech = [...new Set(rows.flatMap(r=>r.tech))];
+    const match = !kw || (cid+rows.map(r=>r.cap+r.name).join('')+tech.join(' ')).toLowerCase().includes(kw);
+    if(!match) return '';
+    return `<div class="comp${c.legacy?' legacy':''}">
+      <h3><span class="cid">${cid}</span>${c.legacy?rows[0].comp+' 组件（存量文档承载）':hl(c.card.split('/').pop().replace('.md',''))}</h3>
+      <div class="caps">${rows.map(r=>`<span title="${r.name}">${r.cap} ${hl(r.name)}</span>`).join('')}</div>
+      <div class="tech"><b>技术锚点 ${tech.length}：</b>${tech.map(hl).join('；')}</div>
+      <div class="foot">
+        <span>FR ${rows.reduce((a,r)=>a+(r.fr||0),0)||'—'} · AC ${rows.reduce((a,r)=>a+(r.ac||0),0)||'存量卡内'}</span>
+        ${c.card?`<a href="../${c.card}">PRD 卡 ↗</a>`:''}
+      </div></div>`;
+  }).join('');
+  return `<div class="plat-head">
+      <h2 style="color:${PCOLOR[p]}">${PNAME[p]}</h2>
+      <span style="color:#98a0aa;font-size:12px">${{ '商品':'上游 · 把货变标准','搜索':'下游 · 让人找到货','客服':'贯穿 · 守护成交' }[p]}</span>
+      <span class="scen">服务场景：${scens.map(x=>`<b>${x} ${DATA.scenarios[x].name}</b>`).join('')}</span>
+      <span style="font-size:12px;color:#98a0aa">${s.n} 项能力 · ${s.comps.length} 组件 · ${s.acs} 验收用例</span>
+    </div><div class="cards">${cards}</div>`;
+}
+
+/* ---------- 导航 ---------- */
+function go(l, p){
+  level = l; if(p!==undefined) focus = p;
+  $('l3').style.display = level===3 ? 'block' : 'none';
+  $('stage').style.display = level===3 ? 'none' : 'block';
+  $('hint').style.display = level===3 ? 'none' : 'block';
+  $('crumb').innerHTML = `<span class="lvl" onclick="go(1)">L1 全景</span>` +
+    (level>=2?`<span class="sep">›</span><span class="lvl" onclick="go(2)">L2 容器</span>`:'') +
+    (level===3?`<span class="sep">›</span><b>L3 ${PNAME[focus]}</b>`:'') +
+    `<span class="sep" style="margin-left:14px">·</span><span style="color:#9aa4b0">${DATA.rows.reduce((a,r)=>a+(r.ac||0),0)} 验收用例 · ${Object.keys(DATA.components).length} 组件 · ${DATA.rows.reduce((a,r)=>a+r.tech.length,0)} 锚点</span>`;
+  if(level===1){ $('stage').innerHTML = `<div class="svgbox">${l1()}</div>`; }
+  if(level===2){ $('stage').innerHTML = `<div class="svgbox">${l2()}</div>`; }
+  if(level===3){ $('l3').innerHTML = l3(focus); window.scrollTo(0,0); }
+}
+$('q').addEventListener('input', e=>{ kw = e.target.value.trim().toLowerCase(); if(level===3) $('l3').innerHTML = l3(focus); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ go(level===3?2:1); } });
+go(1);
+</script>
+</body>
+</html>

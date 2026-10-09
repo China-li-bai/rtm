@@ -14,7 +14,7 @@ interface NodeBoxProps {
   onHover: (id: string | null) => void;
 }
 
-/** 泳道节点卡片：normal/highlight/dashed/diamond/bar/loopchip 六形态的分发渲染 */
+/** 泳道节点卡片：normal/highlight/dashed/boundary/diamond/bar/loopchip 七形态的分发渲染 */
 export function NodeBox({ n, sel, dim, onSelect, onHover }: NodeBoxProps) {
   const style = { left: n.x, top: n.y, width: n.w, ...(n.h ? { height: n.h } : {}) };
   const hoverProps = {
@@ -46,7 +46,9 @@ export function NodeBox({ n, sel, dim, onSelect, onHover }: NodeBoxProps) {
       </div>
     );
   }
-  const kindCls = (n.kind === "highlight" ? " hl" : n.kind === "dashed" ? " dash" : "") + (n.aip ? " has-aip" : "");
+  const kindCls =
+    (n.kind === "highlight" ? " hl" : n.kind === "dashed" ? " dash" : n.kind === "boundary" ? " bnd" : "") +
+    (n.aip ? " has-aip" : "");
   return (
     <div className={`node${kindCls}${sel ? " sel" : ""}${dim ? " dim" : ""}`} style={style}
       onClick={() => onSelect(n.id)} {...hoverProps}>

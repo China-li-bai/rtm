@@ -1,0 +1,313 @@
+specification {
+  element scenario { style { shape rectangle color secondary } }
+  element capability { style { shape rectangle color secondary } }
+  element platform { style { shape rectangle color primary } }
+  element component { style { shape rectangle color muted } }
+  element tech { style { shape queue color muted } }
+  element infra { style { shape cylinder color muted } }
+}
+model {
+  // ===== 泳道一：业务层（场景与业务能力）=====
+  layerBiz = platform '业务层 · 场景与业务能力' {
+    S_01 = scenario 'S-01 供应商推品上架'
+    S_02 = scenario 'S-02 自然语言找货下单'
+    S_03 = scenario 'S-03 关键词搜索比选'
+    S_04 = scenario 'S-04 客服咨询即答'
+    S_05 = scenario 'S-05 售后与转人工'
+    S_06 = scenario 'S-06 集采专区合规采买'
+    S_07 = scenario 'S-07 存量商品清洗治理'
+    S_08 = scenario 'S-08 数据飞轮持续优化'
+    S_09 = scenario 'S-09 审核运营与供应商协同'
+    S_10 = scenario 'S-10 客服运营管理'
+    AIP_001_002 = capability 'AIP-001-002 商品库管理'
+    AIP_003_004 = capability 'AIP-003-004 类目治理'
+    AIP_005_006 = capability 'AIP-005-006 属性治理'
+    AIP_007 = capability 'AIP-007 商品图文审核'
+    AIP_008 = capability 'AIP-008 描述规范性校验'
+    AIP_009 = capability 'AIP-009 审核结果分类展示'
+    AIP_010 = capability 'AIP-010 同款精确匹配'
+    AIP_011 = capability 'AIP-011 SEO 标题生成'
+    AIP_012 = capability 'AIP-012 属性自动提取'
+    AIP_013 = capability 'AIP-013 属性合理性检测'
+    AIP_014 = capability 'AIP-014 集采合规管控'
+    AIP_015 = capability 'AIP-015 智能分词与语义理解'
+    AIP_016_017 = capability 'AIP-016-017 输入补全与智能纠错'
+    AIP_018_020 = capability 'AIP-018-020 类目品牌筛选与属性聚合'
+    AIP_021 = capability 'AIP-021 多维度排序'
+    AIP_022_023 = capability 'AIP-022-023 类目与品牌自动推荐'
+    AIP_024_028 = capability 'AIP-024-028 AI 对话导购'
+    AIP_029_031 = capability 'AIP-029-031 AI 猜你喜欢'
+    AICS_001_009 = capability 'AICS-001-009 在线客服底座'
+    AICS_010_015 = capability 'AICS-010-015 人工接待'
+    AICS_016_017 = capability 'AICS-016-017 意图识别与转接'
+    AICS_018_019 = capability 'AICS-018-019 智能体业务应答'
+    AICS_020_023 = capability 'AICS-020-023 知识库管理'
+    AICS_024_025 = capability 'AICS-024-025 智能客服维护'
+    AICS_026_028 = capability 'AICS-026-028 基础设置'
+    AICS_029 = capability 'AICS-029 报表分析'
+  }
+  // ===== 泳道二：应用层（三大中台 > 组件 > 技术锚点）=====
+  layerApp = platform '应用层 · 三大中台' {
+    platProduct = platform 'AI 商品中台 · 把货变标准' {
+      COMP_01 = component 'COMP-01 AIP-001-002-商品库管理' {
+        COMP_01_t1 = tech 'gov_product 治理三态'
+        COMP_01_t2 = tech 'product_listing staging'
+        COMP_01_t3 = tech 'DDL 顺序迁移体系'
+        COMP_01_t4 = tech '导入对账 fail-loud'
+      }
+      COMP_02 = component 'COMP-02 类目治理智能体产品文档' {
+        COMP_02_t1 = tech 'gov_category_tree poly 6495叶'
+        COMP_02_t2 = tech 'taxonomy_event 户口本'
+        COMP_02_t3 = tech '类目预测端点 auto 80.4%'
+      }
+      COMP_03 = component 'COMP-03 ATTRIBUTE_EXTRACTION_PRD' {
+        COMP_03_t1 = tech 'category_attribute_schema'
+        COMP_03_t2 = tech 'extract-attributes 端点'
+        COMP_03_t3 = tech 'std_title 176074 全量'
+      }
+      COMP_04 = component 'COMP-04 AIP-007-商品图文审核' {
+        COMP_04_t1 = tech 'commit 端点违禁 409'
+        COMP_04_t2 = tech 'product_review_log'
+        COMP_04_t3 = tech '审核队列/agent-review-batch'
+        COMP_04_t4 = tech '人审工作台 resolve'
+        COMP_04_t5 = tech '违禁词库(待建 P0)'
+      }
+      COMP_05 = component 'COMP-05 AIP-008-描述规范性校验' {
+        COMP_05_t1 = tech 'norm_rule 规则配置'
+        COMP_05_t2 = tech '品牌归一 13128'
+        COMP_05_t3 = tech 'std_title 归一规则'
+        COMP_05_t4 = tech 'TCCC 阈值校准先例'
+      }
+      COMP_06 = component 'COMP-06 AIP-010-同款精确匹配' {
+        COMP_06_t1 = tech 'ES 同款簇'
+        COMP_06_t2 = tech 'commit 同款门禁实测拦截6件'
+        COMP_06_t3 = tech 'std_title 向量'
+      }
+      COMP_07 = component 'COMP-07 AIP-011-SEO标题生成' {
+        COMP_07_t1 = tech 'std_title 资产'
+        COMP_07_t2 = tech '属性 Schema 约束'
+        COMP_07_t3 = tech 'LiteLLM 网关'
+      }
+      COMP_08 = component 'COMP-08 AIP-014-集采合规管控' {
+        COMP_08_t1 = tech 'zen-engine 规则引擎'
+        COMP_08_t2 = tech 'handoff fail-safe 判例'
+        COMP_08_t3 = tech 'rule_eval_log(待建)'
+      }
+    }
+    platSearch = platform 'AI 搜索中台 · 让人找到货' {
+      COMP_09 = component 'COMP-09 AIP-015-语义检索与Query理解' {
+        COMP_09_t1 = tech 'ES synonym_graph 热更新'
+        COMP_09_t2 = tech 'Milvus 176074 向量'
+        COMP_09_t3 = tech 'SXJG→三雄极光 实测'
+        COMP_09_t4 = tech 'search_log(待建 P1)'
+      }
+      COMP_10 = component 'COMP-10 AIP-016-017-输入补全与智能纠错' {
+        COMP_10_t1 = tech 'gov_synonym poly 重锚定 2124'
+        COMP_10_t2 = tech 'ES suggester(待接)'
+        COMP_10_t3 = tech '搜索日志(待建 P1)'
+      }
+      COMP_11 = component 'COMP-11 AIP-018-020-筛选面板与属性聚合' {
+        COMP_11_t1 = tech 'gov_category_tree 6495叶'
+        COMP_11_t2 = tech '品牌归一 13128'
+        COMP_11_t3 = tech 'category_attribute_schema(重建中)'
+      }
+      COMP_12 = component 'COMP-12 AIP-021-多维排序' {
+        COMP_12_t1 = tech 'QP 双路融合'
+        COMP_12_t2 = tech '历史订单 gold 192万行'
+        COMP_12_t3 = tech 'GrowthBook A/B'
+        COMP_12_t4 = tech '曝光日志(待建)'
+      }
+      COMP_13 = component 'COMP-13 AIP-022-023-类目品牌推荐' {
+        COMP_13_t1 = tech 'predict-category 端点 @1=62.7%'
+        COMP_13_t2 = tech '品牌归一 13128'
+      }
+      COMP_14 = component 'COMP-14 AIP-024-028-AI对话导购' {
+        COMP_14_t1 = tech '采购解析 MVP-1 1.1s'
+        COMP_14_t2 = tech '推荐出口 MVP-2 2.4s'
+        COMP_14_t3 = tech 'portal 转发路由'
+      }
+      COMP_15 = component 'COMP-15 AIP-029-031-AI猜你喜欢' {
+        COMP_15_t1 = tech 'past_orders gold 星型 dim_product 40万'
+        COMP_15_t2 = tech '双路检索'
+      }
+    }
+    platService = platform 'AI 客服中台 · 守护成交' {
+      COMP_16 = component 'COMP-16 AICS-001-009-双通道在线客服底座' {
+        COMP_16_t1 = tech 'Chatwoot v4.17.1 ADR-001'
+        COMP_16_t2 = tech 'webhook 适配器 ADR-008'
+        COMP_16_t3 = tech 'portal #/kb'
+        COMP_16_t4 = tech 'widget demo 8005'
+      }
+      COMP_17 = component 'COMP-17 AICS-010-015-人工接待' {
+        COMP_17_t1 = tech 'Chatwoot 坐席台'
+        COMP_17_t2 = tech 'conv6 四动作实测'
+        COMP_17_t3 = tech '回复建议引擎 :8003 909ms'
+      }
+      COMP_18 = component 'COMP-18 AICS-016-025-智能体接待' {
+        COMP_18_t1 = tech 'faq_kb 35条 命中0.911'
+        COMP_18_t2 = tech 'handoff 硬规则修复'
+        COMP_18_t3 = tech 'conv7 多轮实测'
+        COMP_18_t4 = tech 'chatwoot_sync 6秒'
+      }
+      COMP_19 = component 'COMP-19 AICS-026-029-基础设置与报表' {
+        COMP_19_t1 = tech '平台控制面 DQ/评测/口径三注册表'
+        COMP_19_t2 = tech 'portal 体检页'
+        COMP_19_t3 = tech '报表物化(待建)'
+      }
+    }
+  }
+  // ===== 泳道三：技术层（基础设施）=====
+  layerTech = platform '技术层 · 基础设施' {
+    pg = infra 'PostgreSQL 主数据'
+    es = infra 'Elasticsearch'
+    mv = infra 'Milvus 向量'
+    llm = infra 'LiteLLM 模型网关'
+    chw = infra 'Chatwoot 坐席台'
+    dag = infra 'Dagster 编排'
+    gb = infra 'GrowthBook 实验'
+    rd = infra 'Redis'
+  }
+  // ===== 追溯关系边 =====
+  AIP_001_002 -> S_01 '满足'
+  AIP_001_002 -> S_07 '满足'
+  COMP_01 -> AIP_001_002 '实现'
+  AIP_003_004 -> S_01 '满足'
+  AIP_003_004 -> S_07 '满足'
+  COMP_02 -> AIP_003_004 '实现'
+  AIP_005_006 -> S_01 '满足'
+  AIP_005_006 -> S_07 '满足'
+  COMP_03 -> AIP_005_006 '实现'
+  AIP_007 -> S_01 '满足'
+  AIP_007 -> S_09 '满足'
+  COMP_04 -> AIP_007 '实现'
+  AIP_008 -> S_01 '满足'
+  AIP_008 -> S_07 '满足'
+  COMP_05 -> AIP_008 '实现'
+  AIP_009 -> S_01 '满足'
+  AIP_009 -> S_09 '满足'
+  COMP_04 -> AIP_009 '实现'
+  AIP_010 -> S_01 '满足'
+  AIP_010 -> S_03 '满足'
+  AIP_010 -> S_07 '满足'
+  COMP_06 -> AIP_010 '实现'
+  AIP_011 -> S_01 '满足'
+  AIP_011 -> S_03 '满足'
+  COMP_07 -> AIP_011 '实现'
+  AIP_012 -> S_01 '满足'
+  AIP_012 -> S_07 '满足'
+  COMP_03 -> AIP_012 '实现'
+  AIP_013 -> S_01 '满足'
+  AIP_013 -> S_07 '满足'
+  COMP_05 -> AIP_013 '实现'
+  AIP_014 -> S_06 '满足'
+  COMP_08 -> AIP_014 '实现'
+  AIP_015 -> S_02 '满足'
+  AIP_015 -> S_03 '满足'
+  COMP_09 -> AIP_015 '实现'
+  AIP_016_017 -> S_03 '满足'
+  COMP_10 -> AIP_016_017 '实现'
+  AIP_018_020 -> S_03 '满足'
+  COMP_11 -> AIP_018_020 '实现'
+  AIP_021 -> S_03 '满足'
+  AIP_021 -> S_08 '满足'
+  COMP_12 -> AIP_021 '实现'
+  AIP_022_023 -> S_03 '满足'
+  AIP_022_023 -> S_08 '满足'
+  COMP_13 -> AIP_022_023 '实现'
+  AIP_024_028 -> S_02 '满足'
+  COMP_14 -> AIP_024_028 '实现'
+  AIP_029_031 -> S_02 '满足'
+  AIP_029_031 -> S_03 '满足'
+  AIP_029_031 -> S_08 '满足'
+  COMP_15 -> AIP_029_031 '实现'
+  AICS_001_009 -> S_04 '满足'
+  AICS_001_009 -> S_05 '满足'
+  COMP_16 -> AICS_001_009 '实现'
+  AICS_010_015 -> S_05 '满足'
+  AICS_010_015 -> S_04 '满足'
+  COMP_17 -> AICS_010_015 '实现'
+  AICS_016_017 -> S_04 '满足'
+  AICS_016_017 -> S_05 '满足'
+  COMP_18 -> AICS_016_017 '实现'
+  AICS_018_019 -> S_04 '满足'
+  COMP_18 -> AICS_018_019 '实现'
+  AICS_020_023 -> S_04 '满足'
+  AICS_020_023 -> S_08 '满足'
+  COMP_18 -> AICS_020_023 '实现'
+  AICS_024_025 -> S_10 '满足'
+  COMP_18 -> AICS_024_025 '实现'
+  AICS_026_028 -> S_10 '满足'
+  COMP_19 -> AICS_026_028 '实现'
+  AICS_029 -> S_10 '满足'
+  COMP_19 -> AICS_029 '实现'
+  pg -> platProduct '主数据'
+  pg -> platSearch '行为日志'
+  pg -> platService '知识库/工单'
+  es -> platSearch '全文检索'
+  mv -> platSearch '语义向量'
+  llm -> platProduct '抽取/审核'
+  llm -> platSearch 'Query 理解'
+  llm -> platService '智能体'
+  chw -> platService '坐席工作台'
+  dag -> platProduct '治理编排'
+  gb -> platSearch 'A/B 实验'
+}
+views {
+  view index {
+    title '三层泳道全景（点击任意元素下钻）'
+    include layerBiz, layerApp, layerTech, layerApp -> *, layerTech -> layerApp
+    autoLayout TopBottom
+  }
+  view of platProduct {
+    title 'AI 商品中台 · 把货变标准 · 组件视图'
+    include *
+  }
+  view of platSearch {
+    title 'AI 搜索中台 · 让人找到货 · 组件视图'
+    include *
+  }
+  view of platService {
+    title 'AI 客服中台 · 守护成交 · 组件视图'
+    include *
+  }
+  view of S_01 {
+    title 'S-01 追溯链（能力→组件→锚点）'
+    include *
+  }
+  view of S_02 {
+    title 'S-02 追溯链（能力→组件→锚点）'
+    include *
+  }
+  view of S_03 {
+    title 'S-03 追溯链（能力→组件→锚点）'
+    include *
+  }
+  view of S_04 {
+    title 'S-04 追溯链（能力→组件→锚点）'
+    include *
+  }
+  view of S_05 {
+    title 'S-05 追溯链（能力→组件→锚点）'
+    include *
+  }
+  view of S_06 {
+    title 'S-06 追溯链（能力→组件→锚点）'
+    include *
+  }
+  view of S_07 {
+    title 'S-07 追溯链（能力→组件→锚点）'
+    include *
+  }
+  view of S_08 {
+    title 'S-08 追溯链（能力→组件→锚点）'
+    include *
+  }
+  view of S_09 {
+    title 'S-09 追溯链（能力→组件→锚点）'
+    include *
+  }
+  view of S_10 {
+    title 'S-10 追溯链（能力→组件→锚点）'
+    include *
+  }
+}

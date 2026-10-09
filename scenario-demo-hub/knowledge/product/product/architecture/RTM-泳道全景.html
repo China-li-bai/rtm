@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>RTM 泳道全景 · 保利和采商城（可点击交互）</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; background:#f5f6f8; color:#333; }
+  header { background:#44546A; color:#fff; padding:12px 24px; position:sticky; top:0; z-index:30; }
+  header h1 { font-size:17px; display:inline-block; margin-right:14px; }
+  header .lg { font-size:11.5px; color:#cfd6df; margin-left:14px; }
+  header .lg i { display:inline-block; width:22px; height:0; border-top:2.4px solid #FC773F; vertical-align:middle; margin:0 4px 0 12px; }
+  header .lg i.d { border-top-style:dashed; border-color:#9aa4b0; }
+  .svgwrap { display:flex; justify-content:center; padding:10px 14px 0; }
+  svg text { font-family:inherit; }
+  .node { cursor:pointer; }
+  .node:hover .card { stroke:#FC773F; stroke-width:2.2; }
+  .hint { text-align:center; font-size:11.5px; color:#98a0aa; padding:6px 0 2px; }
+
+  /* 详情弹层（右侧滑入） */
+  #mask { position:fixed; inset:0; background:rgba(30,36,45,.42); display:none; z-index:40; }
+  #panel { position:fixed; top:0; right:-560px; width:540px; max-width:94vw; height:100%; background:#fff; z-index:50;
+           box-shadow:-8px 0 30px rgba(0,0,0,.18); transition:right .22s ease; overflow-y:auto; padding:20px 24px 40px; }
+  #panel.on { right:0; }
+  #panel .close { position:absolute; top:14px; right:16px; border:none; background:#F2F3F5; border-radius:50%;
+                  width:30px; height:30px; font-size:15px; cursor:pointer; color:#666; }
+  #panel h2 { font-size:17px; color:#D95F2B; padding-right:36px; }
+  #panel .sub { font-size:11.5px; color:#98a0aa; margin:2px 0 10px; }
+  .seg { margin-top:12px; border-left:3px solid #FC773F; background:#FDEFE7; border-radius:0 9px 9px 0; padding:10px 13px; }
+  .seg.alt { background:#F7F8FA; border-color:#44546A; }
+  .seg h4 { font-size:12px; color:#D95F2B; margin-bottom:4px; }
+  .seg.alt h4 { color:#44546A; }
+  .seg p { font-size:12.8px; line-height:1.65; }
+  .trace { margin-top:16px; }
+  .trace h4 { font-size:12px; color:#767171; margin-bottom:6px; }
+  .trace .chip { display:inline-block; font-size:11px; border-radius:10px; padding:3px 10px; margin:2px 4px 2px 0; }
+  .trace .c1 { background:#EDF0F4; color:#44546A; }
+  .trace .c2 { background:#FDEFE7; color:#D95F2B; }
+  .trace .c3 { background:#F2F3F5; color:#666; }
+  .src { margin-top:14px; font-size:10.5px; color:#98a0aa; line-height:1.6; border-top:1px dashed #e3e6ea; padding-top:8px; }
+
+  /* 底部对比总表 */
+  #cmp { padding:18px 28px 50px; }
+  #cmp h2 { font-size:16px; color:#333; margin-bottom:4px; }
+  #cmp .note { font-size:11px; color:#98a0aa; margin-bottom:10px; }
+  table { border-collapse:collapse; width:100%; background:#fff; font-size:12px; }
+  th, td { border:1px solid #ececf1; padding:8px 10px; text-align:left; vertical-align:top; line-height:1.55; }
+  th { background:#44546A; color:#fff; font-size:12px; white-space:nowrap; }
+  th.dim { width:64px; background:#333a45; }
+  td.dim { font-weight:700; color:#D95F2B; background:#FDEFE7; white-space:nowrap; text-align:center; }
+  td .was { color:#98a0aa; }
+  td .arrow { color:#FC773F; font-weight:700; margin:0 4px; }
+  td .now { color:#1f7a3d; font-weight:600; }
+  td .cap { font-size:10.5px; color:#98a0aa; display:block; margin-top:2px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>RTM 泳道全景 · 保利和采商城</h1>
+  业务全景 → 三大中台 → 底座 ｜ 三层联动：业务层（泳道环节）→ 应用层（能力编号）→ 技术层（锚点），点击环节看「实现/被服务」追溯链
+  <span class="lg">图例<i></i>主流程<i class="d"></i>数据回流</span>
+</header>
+<div class="hint">💡 点击任意编号环节 → 右侧弹出「场景/约束 · AI 做了什么 · 怎么解决 · 前后对比」+ 追溯链（场景→能力→组件→技术锚点）。Esc 关闭。</div>
+<div class="svgwrap"><svg viewBox="0 0 1500 780" width="98%" style="max-width:1500px" id="lane"></svg></div>
+
+<div id="cmp">
+  <h2>AI 前后对比总表（人力 / 时间 / 金钱 / 数据）</h2>
+  <div class="note">口径：〔实测〕= 项目已验证数字（STATUS.md）｜〔设计目标〕= 方案 v2 承诺口径（评测基线锁定后以 A/B 复核）</div>
+  <table id="cmpTable"></table>
+</div>
+
+<div id="mask" onclick="closePanel()"></div>
+<div id="panel"><button class="close" onclick="closePanel()">✕</button><div id="panelBody"></div></div>
+
+<script>
+/* ============ 节点数据：四段式 + 追溯链（编号对齐 architecture/model.yaml RTM） ============ */
+const NODES = {
+n1:{no:'01',name:'推品接入',lane:'供应商侧',caps:'AIP-001/002',
+  scene:'京东、震坤行（ZKH）等四大电商经 API 推送商品，集采供应商批量导入目录。约束：来源多、字段口径不一、同一商品多路重复进入，且"推送即上架"曾无审核环节。',
+  what:'多商品库按系统/来源/批次纳管（原始层只读、治理层追加写），同款冲突按源优先级确定性裁决，电商推送幂等去重。',
+  how:'原始/治理两级存储 + 导入批次对账 fail-loud + 源优先级规则引擎。技术锚点：gov_product 治理三态 clean 167,213 / review 21,758 / quarantined 240〔实测〕、product_listing staging。',
+  cmp:'人力：人工分拣多来源商品 → 系统自动纳管分桶；数据：在管商品 189,211 条全量进入治理链〔实测〕；时间：入库即入队，无人工登记环节。',
+  trace:{s:['S-01 供应商推品上架','S-07 存量清洗'],cap:['AIP-001-002 商品库管理'],comp:['COMP-01'],tech:['gov_product 三态','DDL 顺序迁移','导入对账 fail-loud']}},
+n2:{no:'02',name:'图文审核',lane:'AI 商品中台',caps:'AIP-007/009',
+  scene:'推品直接上架 = 法规与集团采购政策的合规风险敞口（违禁品标识、违法宣传、低俗虚假图文）；人工逐条审核在批量推品量下不可持续。',
+  what:'三层递进自动审核：违禁词库命中即拦（确定性）→ 大模型识别谐音/变体规避 → 图像识别违规物料；违规定位到文本片段与图片区域，驳回原因批量反馈供应商。',
+  how:'规则先行 + 语义兜底 + 人工只复核待复核边缘 case；fail-safe：任一模型服务不可用转人工、绝不静默放行。锚点：commit 端点违禁词 409 拦截〔实测〕、审核 Agent 单条 12s 四工具全调用〔实测〕、人审工作台裁决落库〔实测〕。',
+  cmp:'人力：全量人工初审 → 人工只看边缘 case（审核工作量 ↓60%+〔设计目标〕）；风险：事后抽检 → 入库前 100% 拦截；时间：批量节奏满足日常审核（500 条/10 分钟口径待 Q2 锁定）。',
+  trace:{s:['S-01','S-09 审核运营'],cap:['AIP-007 图文审核','AIP-009 审核结果分类展示'],comp:['COMP-04'],tech:['commit 409 实测','product_review_log','人审工作台 resolve','违禁词库（P0 待建）']}},
+n3:{no:'03',name:'治理流水线',lane:'AI 商品中台',caps:'AIP-003~014',
+  scene:'商品"挂错、重名、叫法乱"：类目错挂实测约 18%，四年 ¥1.22 亿订单因类目缺失无法分析〔实测〕；属性缺失让搜索筛选、比价、客服问答全无原料。',
+  what:'一条流水线把货变标准：类目自动挂载（零样本→自动标注→小模型接力）、属性抽取（Schema 约束防幻觉）、规范性/合理性校验（TCCC 全量体检）、同款去重、SEO 标题、集采合规管控。',
+  how:'治理三态（clean/review/quarantined）+ 三档置信分流（自动/人审/退回）+ 人工确认反哺模板。锚点：poly 类目树 6,495 叶〔实测〕、标题标准化 176,074 全量〔实测〕、挂载恢复 94.9%〔实测〕、类目预测 auto 精度 80.4%〔实测〕、TCCC 二审 8,311 条 corrected 93.7%〔实测〕。',
+  cmp:'人力：逐条人工挑类目/补属性 → 机器批量治理 + 人工只判卷；数据：类目错挂 18%〔实测〕→ 二审修正 93.7%〔实测〕；金钱：¥1.22 亿不可分析订单 → 类目体系全量挂载可分析。',
+  trace:{s:['S-01','S-07','S-06 集采合规'],cap:['AIP-003~006 类目/属性','AIP-008/013 校验','AIP-010 同款','AIP-011 SEO','AIP-014 集采合规'],comp:['COMP-02/03','COMP-05/06/07/08'],tech:['poly 树 6495 叶','std_title 176074','TCCC 审计','类目预测端点']}},
+n4:{no:'04',name:'标准商品池',lane:'AI 商品中台',caps:'AIP-010',
+  scene:'治理成果必须成为"可消费的资产"——搜索要索引、客服要知识、比价要同款簇；池子不标准，下游全部返工。',
+  what:'唯一商品身份（同款簇）+ 标准属性 + std_title + 类目挂载，治理完成即进入检索索引与知识库。',
+  how:'治理层产物直出 ES 索引（标题/属性/类目/向量）与客服商品知识库。锚点：ES 同款簇、Milvus 176,074 全量向量〔实测〕、品牌归一 13,128〔实测〕。',
+  cmp:'数据：三个下游各建各的商品视图 → 一池三用（检索/知识/比价基础）；时间：治理完成即索引生效（分钟级）。',
+  trace:{s:['S-01','S-03','S-04'],cap:['AIP-010 同款精确匹配'],comp:['COMP-06'],tech:['ES 同款簇','Milvus 全量向量','品牌归一 13128']}},
+n5:{no:'05',name:'语义检索',lane:'AI 搜索中台',caps:'AIP-015~023',
+  scene:'关键词精确匹配下，同义词/品牌别名/型号变体一概搜不到——采购人说"土话"就零结果，只能线下问。',
+  what:'分词 + 品牌型号实体识别、同义词与别名热扩展、语义+关键词双路召回、三面筛选（类目/品牌/属性聚合）、多维排序、相关类目品牌推荐；真无货诚实返回"无匹配"。',
+  how:'QP 双同步链路（PG 词库正源 → ES 同义词热更新 + Milvus 语义向量）。实测用例：搜「SXJG」命中三雄极光（品牌别名热扩展生效）〔实测〕；锚点：predict-category 端点 @1=62.7%〔实测〕。',
+  cmp:'时间：平均搜索时长缩短、零结果率持续下降〔指标口径〕；体验：记关键词 → 说人话就能搜；转化：精确前三命中 ≥95% 为 UAT 验收基线〔设计目标〕。',
+  trace:{s:['S-03 关键词搜索比选','S-08'],cap:['AIP-015~023'],comp:['COMP-09/10/11/12/13'],tech:['ES synonym_graph','Milvus','QP 双同步','predict-category']}},
+n6:{no:'06',name:'对话导购 + 推荐',lane:'AI 搜索中台',caps:'AIP-024~031',
+  scene:'预算+场景+品类混合需求（"200 元以内适合跑步的蓝牙耳机"）拆不成关键词；复购与长尾需求没有被动发现路径。',
+  what:'自然语言一句直搜（五要素解析+预算换算）、多轮追问收敛、按单位偏好推荐；详情页"看了又看/买了又买"、零结果兜底推荐——每条推荐带理由与来源。',
+  how:'防幻觉铁律：推荐商品与价格全部来自检索原值、代码校验回填。锚点：采购解析 MVP-1 实测 1.1s、推荐出口 MVP-2 实测 2.4s（推荐理由只引原值 25.65/22.58 元 <30 上限）〔实测〕；历史订单 192 万行做推荐冷启动〔实测〕。',
+  cmp:'体验：学会搜索 → 像跟导购员聊天；转化：对话导购转化率为 UAT 指标〔设计目标〕；人力：长尾咨询不打扰人工（AI 兜底引导）。',
+  trace:{s:['S-02 自然语言找货下单'],cap:['AIP-024~028 对话导购','AIP-029~031 猜你喜欢'],comp:['COMP-14/15'],tech:['MVP-1 1.1s','MVP-2 2.4s','订单 gold 192 万行']}},
+n7:{no:'07',name:'下单交易（集采合规）',lane:'采购侧 · 交易',caps:'AIP-014',
+  scene:'找到货只是开始——集采限额、审批流、生鲜预占等交易规则要确定性执行（不能交给概率模型）。交易域由商城承接，AI 侧提供合规实时判定与搜索→加购顺滑衔接。',
+  what:'规则引擎三卡点判定：上架准入 / 加购校验 / 下单终审，违规即拦并给出命中规则；fail-safe：引擎故障全转人工零静默放行。',
+  how:'zen-engine 规则引擎 + 判定留痕：任意订单可回放判定依据（规则版本 + 输入快照，rule_eval_log 待建）。',
+  cmp:'风险：事后审计追责 → 事前实时拦截；审计：翻制度文件 → 订单级判定回放。',
+  trace:{s:['S-06 集采合规采买'],cap:['AIP-014'],comp:['COMP-08'],tech:['zen-engine','rule_eval_log（待建）']}},
+n8:{no:'08',name:'智能体接待',lane:'AI 客服中台',caps:'AICS-016~025',
+  scene:'人工客服首响分钟级、夜间断档；同一问题不同坐席答案不一（口径风险）；重复问题占用大量人力。',
+  what:'意图识别分流、FAQ 标准答案强制一致、商品知识 RAG 与订单接口实时查询、回答标注知识来源可溯源；7×24 秒级应答。',
+  how:'转人工是硬规则（投诉/纠纷/情绪异常/轮数超限）不是模型决策；知识库改条目 6 秒生效〔实测〕。锚点：FAQ 命中 0.911〔实测〕、conv5「怎么开发票」秒答、conv7 多轮上下文承接〔实测〕、Chatwoot+webhook 适配器。',
+  cmp:'时间：首响分钟级 → 秒级〔设计目标 + FAQ 实测秒答〕；人力：重复问题 AI 承接，人工聚焦复杂场景；一致性：口径因人而异 → 标准答案强制一致。',
+  trace:{s:['S-04 客服咨询即答'],cap:['AICS-016~025 智能体接待'],comp:['COMP-18'],tech:['faq_kb 命中 0.911','handoff 硬规则','chatwoot_sync 6s']}},
+n9:{no:'09',name:'转人工 · 工单',lane:'AI 客服中台',caps:'AICS-010~015',
+  scene:'转人工后队列无序、夜间无人即断档、风险内容（不当承诺/违规表述）靠事后抽检。',
+  what:'排队余量依序+队列透明、无坐席留言自动转工单次日跟进（一件不丢）、会话风险实时监控提示坐席与组长、转接携带 AI 摘要（用户不用重讲）。',
+  how:'人机协同不抢话：坐席接入 bot 自动静默〔实测〕；坐席处理时话术/知识/相似工单 AI 递到手边（回复建议 909ms/3 条带溯源〔实测〕）。',
+  cmp:'体验：夜间留言石沉大海 → 工单次日闭环 100%；效率：坐席绩效可度量（接通率/满意度看板）；风险：事后追责 → 实时提示。',
+  trace:{s:['S-05 售后与转人工','S-10'],cap:['AICS-010~015 人工接待'],comp:['COMP-17'],tech:['conv6 四动作实测','回复建议 909ms','Chatwoot 坐席台']}},
+n10:{no:'10',name:'数据回流飞轮',lane:'数据底座',caps:'横贯三中台',
+  scene:'AI 能力"上线即衰减"是行业通病——模型不懂新词、知识库过期、排序过时。',
+  what:'全量行为与坏案例回流：搜索/点击/订单日志、客服问答差评、审核驳回——分别驱动词库生长、排序变准、知识库补条目、规则迭代。',
+  how:'评测门禁化：指标基线（SOW 表 13）+ A/B + 灰度（5%→20%→50%→100%）；先例路径：零结果词补进同义词库，次日所有人搜得到；DQ/评测/口径三注册表平台化〔实测〕。',
+  cmp:'数据：一次性交付 → 每天比昨天更懂客户（越用越强）；金钱：效果衰减推倒重做 → 持续复利（版本基线逐版对比，不达标不上线）。',
+  trace:{s:['S-08 数据飞轮持续优化'],cap:['横贯三中台'],comp:['底座四件套'],tech:['评测回归门禁','DQ 三注册表','GrowthBook A/B','Dagster 对账']}}
+};
+
+/* ============ 对比总表 ============ */
+const CMP = {
+  cols:['商品审核与上架','商品治理（类目/属性）','采购找货','客服咨询','售后与夜间','持续优化'],
+  rows:[
+    {dim:'人力',cells:[
+      '全量人工初审<span class="arrow">→</span><span class="now">人工只复核边缘 case（↓60%+）</span><span class="cap">〔设计目标〕审核 Agent 单条 12s〔实测〕</span>',
+      '逐条人工挑类目/补属性<span class="arrow">→</span><span class="now">机器批量治理+人工判卷</span><span class="cap">自动标注 162,304 条零 pending〔实测〕</span>',
+      '采购员自学关键词/线下问<span class="arrow">→</span><span class="now">说人话即搜即得</span><span class="cap">对话导购五要素解析 1.1s〔实测〕</span>',
+      '重复问题人工逐答<span class="arrow">→</span><span class="now">FAQ 标准答案 + RAG</span><span class="cap">命中 0.911〔实测〕</span>',
+      '夜间无人值守<span class="arrow">→</span><span class="now">AI 承接 + 工单次日闭环</span>',
+      '效果衰减重做<span class="arrow">→</span><span class="now">数据回流持续迭代</span><span class="cap">双周模型 / 月度规则节奏</span>']},
+    {dim:'时间',cells:[
+      '人工上架逐条小时级<span class="arrow">→</span><span class="now">流水线批量（上架时长为 SOW 表 13 指标）</span>',
+      '存量清洗无尽头<span class="arrow">→</span><span class="now">176,074 标题全量完成〔实测〕</span>',
+      '零结果反复换词<span class="arrow">→</span><span class="now">零结果率持续下降 + 兜底推荐</span>',
+      '首响分钟级<span class="arrow">→</span><span class="now">秒级</span><span class="cap">〔设计目标，FAQ 实测秒答〕</span>',
+      '次日无响应<span class="arrow">→</span><span class="now">工单 100% 次日跟进</span>',
+      '指标漂移数月不知<span class="arrow">→</span><span class="now">评测门禁逐版拦截（不达标不上线）</span>']},
+    {dim:'金钱',cells:[
+      '合规风险事后处置<span class="arrow">→</span><span class="now">入库前 100% 拦截</span>',
+      '¥1.22 亿订单不可分析〔实测〕<span class="arrow">→</span><span class="now">类目全量挂载可分析</span><span class="cap">挂载 94.9%〔实测〕</span>',
+      '线下采购价格事后才知<span class="arrow">→</span><span class="now">同款簇比价基础就绪</span><span class="cap">同款匹配 P≥85% 为验收基线〔设计目标〕</span>',
+      '坐席按峰值人力配置<span class="arrow">→</span><span class="now">AI 分流 + 坐席辅助提效</span>',
+      '夜间值守人力<span class="arrow">→</span><span class="now">0（AI + 工单）</span>',
+      '重复建设数据管道<span class="arrow">→</span><span class="now">底座一次建设三台复用</span>']},
+    {dim:'数据',cells:[
+      '商品无标准身份<span class="arrow">→</span><span class="now">同款簇唯一身份 + 属性图谱</span>',
+      '类目错挂约 18%〔实测〕<span class="arrow">→</span><span class="now">TCCC 二审修正 93.7%〔实测〕</span>',
+      '行为数据无沉淀<span class="arrow">→</span><span class="now">搜索/点击/订单日志回流</span>',
+      '口径因人而异<span class="arrow">→</span><span class="now">FAQ 标准答案 + 来源可溯</span>',
+      '会话不留痕<span class="arrow">→</span><span class="now">全量留痕 + 风险事件记录</span>',
+      '资产散落<span class="arrow">→</span><span class="now">词库/图谱/评测集/模型版本四类增值资产</span>']}
+  ]
+};
+
+/* ============ 泳道 SVG 布局 ============ */
+const LANES = [
+  {y:64,  h:88,  name:'供应商侧',      bg:'#eef1f5'},
+  {y:160, h:168, name:'AI 商品中台',   bg:'#fdf5f0'},
+  {y:336, h:100, name:'AI 搜索中台',   bg:'#fdf5f0'},
+  {y:446, h:82,  name:'采购侧 · 交易', bg:'#eef1f5'},
+  {y:536, h:112, name:'AI 客服中台',   bg:'#fdf5f0'},
+  {y:656, h:100, name:'数据底座',      bg:'#f2f3f5'}
+];
+/* 节点坐标 [x, y, w]（统一 h=66；n10 为横条） */
+const POS = {
+  n1:[168,75,170], n2:[180,196,170], n3:[390,196,220], n4:[640,196,170],
+  n5:[640,352,170], n6:[910,352,170], n7:[910,458,170],
+  n8:[1070,576,170], n9:[1280,576,170], n10:[180,690,1180,44]
+};
+function laneSvg(){
+  let s = '';
+  LANES.forEach(l=>{
+    s += `<rect x="120" y="${l.y}" width="1350" height="${l.h}" fill="${l.bg}" stroke="#e3e6ea"/>`;
+    s += `<text x="134" y="${l.y+24}" font-size="13" font-weight="700" fill="#6b7683">${l.name}</text>`;
+  });
+  /* 主流程箭头（橙实线） */
+  const flows = [
+    'M253,141 L258,196',      /* 01 推品 → 02 审核 */
+    'M350,229 L390,229',      /* 02 → 03 */
+    'M610,229 L640,229',      /* 03 → 04 */
+    'M725,262 L725,352',      /* 04 池 → 05 检索（纵向） */
+    'M810,385 L910,385',      /* 05 → 06 */
+    'M995,418 L995,458',      /* 06 → 07 交易（纵向） */
+    'M995,524 C995,558 1050,568 1120,576', /* 07 → 08 客服 */
+    'M1240,609 L1280,609'     /* 08 → 09 */
+  ];
+  flows.forEach(d=> s += `<path d="${d}" fill="none" stroke="#FC773F" stroke-width="2.4" marker-end="url(#ar)"/>`);
+  /* 回流虚线（灰） */
+  s += `<path d="M1370,576 C1370,330 950,250 816,235" fill="none" stroke="#9aa4b0" stroke-width="1.8" stroke-dasharray="6,5" marker-end="url(#ar2)"/>`;
+  s += `<text x="1030" y="290" font-size="10.5" fill="#8a94a6">客服坏案例 · 行为日志回流 → 知识库 / 治理 / 词库</text>`;
+  s += `<path d="M1370,642 L1370,690" fill="none" stroke="#9aa4b0" stroke-width="1.8" stroke-dasharray="6,5" marker-end="url(#ar2)"/>`;
+  /* 供应商来源标注 */
+  s += `<text x="356" y="105" font-size="10.5" fill="#8a94a6">京东 API · 震坤行 ZKH · 集采目录 · 批量导入</text>`;
+  /* 底座支撑说明 */
+  s += `<text x="750" y="682" font-size="11" fill="#98a0aa" text-anchor="middle">底座四件套（数据 · 模型 · 规则 · 评测）向上支撑三大中台——每个环节"跑在什么技术上"见点击详情的追溯链 ↑</text>`;
+  /* 节点 */
+  for(const [id,p] of Object.entries(POS)){
+    const n = NODES[id];
+    if(id==='n10'){
+      s += `<g class="node" onclick="openPanel('n10')">
+        <rect class="card" x="${p[0]}" y="${p[1]}" width="${p[2]}" height="${p[3]}" rx="22" fill="#fff" stroke="#FC773F" stroke-width="1.8"/>
+        <circle cx="${p[0]+26}" cy="${p[1]+22}" r="13" fill="#FC773F"/><text x="${p[0]+26}" y="${p[1]+26}" font-size="11" fill="#fff" text-anchor="middle" font-weight="700">10</text>
+        <text x="${p[0]+52}" y="${p[1]+27}" font-size="13" font-weight="600" fill="#D95F2B">数据回流飞轮 —— 搜索日志 · 订单行为 · 客服坏案例 · 审核记录 → 词库/排序/知识库/评测集持续生长（点击看四维对比）</text></g>`;
+      continue;
+    }
+    s += `<g class="node" onclick="openPanel('${id}')">
+      <rect class="card" x="${p[0]}" y="${p[1]}" width="${p[2]}" height="66" rx="10" fill="#fff" stroke="#d8dce2" stroke-width="1.6"/>
+      <circle cx="${p[0]+22}" cy="${p[1]+20}" r="12" fill="#FC773F"/><text x="${p[0]+22}" y="${p[1]+24}" font-size="11" fill="#fff" text-anchor="middle" font-weight="700">${n.no}</text>
+      <text x="${p[0]+42}" y="${p[1]+24}" font-size="13" font-weight="700" fill="#2c3e50">${n.name}</text>
+      <text x="${p[0]+16}" y="${p[1]+46}" font-size="10.5" fill="#98a0aa">${n.caps}</text>
+      <text x="${p[0]+16}" y="${p[1]+60}" font-size="9.5" fill="#b8bfc8">点击：场景/约束 · AI 做了什么 · 怎么解决 · 前后对比</text></g>`;
+  }
+  return s;
+}
+function renderLane(){
+  document.getElementById('lane').innerHTML = `
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#FC773F"/></marker>
+    <marker id="ar2" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#9aa4b0"/></marker>
+  </defs>
+  <text x="750" y="34" font-size="16" font-weight="700" text-anchor="middle" fill="#333">业务全景泳道：供应商 → 商品中台（治理）→ 搜索中台（发现）→ 采购交易 → 客服中台（守护）→ 底座（支撑 + 飞轮）</text>
+  ${laneSvg()}`;
+}
+
+/* ============ 详情面板（四段式 + 追溯链） ============ */
+function openPanel(id){
+  const n = NODES[id];
+  document.getElementById('panelBody').innerHTML = `
+    <h2>${n.no} · ${n.name}</h2>
+    <div class="sub">泳道：${n.lane} ｜ 业务能力编号：${n.caps}</div>
+    <div class="seg"><h4>① 场景与约束</h4><p>${n.scene}</p></div>
+    <div class="seg alt"><h4>② AI 做了什么</h4><p>${n.what}</p></div>
+    <div class="seg"><h4>③ 怎么解决（机制与技术锚点）</h4><p>${n.how}</p></div>
+    <div class="seg alt"><h4>④ 前后对比（人力 / 时间 / 金钱 / 数据）</h4><p>${n.cmp}</p></div>
+    <div class="trace"><h4>追溯链（业务场景 → 业务能力 → 技术组件 → 技术锚点，对齐 model.yaml RTM；反向即"被服务"）</h4>
+      <div>${n.trace.s.map(x=>`<span class="chip c1">${x}</span>`).join('')}</div>
+      <div>${n.trace.cap.map(x=>`<span class="chip c2">${x}</span>`).join('')}</div>
+      <div>${n.trace.comp.map(x=>`<span class="chip c2">${x}</span>`).join('')}</div>
+      <div>${n.trace.tech.map(x=>`<span class="chip c3">${x}</span>`).join('')}</div>
+    </div>
+    <div class="src">口径说明：〔实测〕= STATUS.md 已验证数字；〔设计目标〕= 方案 v2 口径，评测基线锁定后以 A/B 复核。完整链路见 architecture/model.yaml 与 00-追溯矩阵.md（生成物，勿手改）。</div>`;
+  document.getElementById('panel').classList.add('on');
+  document.getElementById('mask').style.display = 'block';
+}
+function closePanel(){
+  document.getElementById('panel').classList.remove('on');
+  document.getElementById('mask').style.display = 'none';
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closePanel(); });
+
+/* ============ 渲染 ============ */
+function renderCmp(){
+  let h = `<tr><th class="dim">维度</th>${CMP.cols.map(c=>`<th>${c}</th>`).join('')}</tr>`;
+  CMP.rows.forEach(r=>{
+    h += `<tr><td class="dim">${r.dim}</td>${r.cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+  });
+  document.getElementById('cmpTable').innerHTML = h;
+}
+renderLane(); renderCmp();
+</script>
+</body>
+</html>

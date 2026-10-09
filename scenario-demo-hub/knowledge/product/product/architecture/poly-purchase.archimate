@@ -1,0 +1,319 @@
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.archimatetool.com/archimate" xmlns:archimate="http://www.archimatetool.com/archimate" name="RTM RTM" id="rtm-root" version="1.0">
+  <folder name="Motivation" type="motivation">
+    <element xsi:type="Requirement" id="S-01" name="供应商推品上架"><property key="goal" value="推品合规、快速进入标准商品池"/></element>
+    <element xsi:type="Requirement" id="S-02" name="自然语言找货下单"><property key="goal" value="说人话就能找到货并下单"/></element>
+    <element xsi:type="Requirement" id="S-03" name="关键词搜索比选"><property key="goal" value="关键词找货、筛选比选锁定目标"/></element>
+    <element xsi:type="Requirement" id="S-04" name="客服咨询即答"><property key="goal" value="商品/订单/FAQ 秒级可溯源回答"/></element>
+    <element xsi:type="Requirement" id="S-05" name="售后与转人工"><property key="goal" value="投诉纠纷有人接、夜间不丢件"/></element>
+    <element xsi:type="Requirement" id="S-06" name="集采专区合规采买"><property key="goal" value="集采行为全程规则管控"/></element>
+    <element xsi:type="Requirement" id="S-07" name="存量商品清洗治理"><property key="goal" value="存量数据达到上架标准"/></element>
+    <element xsi:type="Requirement" id="S-08" name="数据飞轮持续优化"><property key="goal" value="行为与坏案例回流让三家越用越强"/></element>
+    <element xsi:type="Requirement" id="S-09" name="审核运营与供应商协同"><property key="goal" value="驳回有原因、反馈有闭环、质量可度量"/></element>
+    <element xsi:type="Requirement" id="S-10" name="客服运营管理"><property key="goal" value="量、质、风险可管理可汇报"/></element>
+  </folder>
+  <folder name="Business" type="business">
+    <element xsi:type="BusinessFunction" id="AIP-001-002" name="AIP-001-002 商品库管理"><property key="sow_id" value="AIP-001-002"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-003-004" name="AIP-003-004 类目治理"><property key="sow_id" value="AIP-003-004"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-005-006" name="AIP-005-006 属性治理"><property key="sow_id" value="AIP-005-006"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-007" name="AIP-007 商品图文审核"><property key="sow_id" value="AIP-007"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-008" name="AIP-008 描述规范性校验"><property key="sow_id" value="AIP-008"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-009" name="AIP-009 审核结果分类展示"><property key="sow_id" value="AIP-009"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-010" name="AIP-010 同款精确匹配"><property key="sow_id" value="AIP-010"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-011" name="AIP-011 SEO 标题生成"><property key="sow_id" value="AIP-011"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-012" name="AIP-012 属性自动提取"><property key="sow_id" value="AIP-012"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-013" name="AIP-013 属性合理性检测"><property key="sow_id" value="AIP-013"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-014" name="AIP-014 集采合规管控"><property key="sow_id" value="AIP-014"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-015" name="AIP-015 智能分词与语义理解"><property key="sow_id" value="AIP-015"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-016-017" name="AIP-016-017 输入补全与智能纠错"><property key="sow_id" value="AIP-016-017"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-018-020" name="AIP-018-020 类目品牌筛选与属性聚合"><property key="sow_id" value="AIP-018-020"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-021" name="AIP-021 多维度排序"><property key="sow_id" value="AIP-021"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-022-023" name="AIP-022-023 类目与品牌自动推荐"><property key="sow_id" value="AIP-022-023"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-024-028" name="AIP-024-028 AI 对话导购"><property key="sow_id" value="AIP-024-028"/></element>
+    <element xsi:type="BusinessFunction" id="AIP-029-031" name="AIP-029-031 AI 猜你喜欢"><property key="sow_id" value="AIP-029-031"/></element>
+    <element xsi:type="BusinessFunction" id="AICS-001-009" name="AICS-001-009 在线客服底座"><property key="sow_id" value="AICS-001-009"/></element>
+    <element xsi:type="BusinessFunction" id="AICS-010-015" name="AICS-010-015 人工接待"><property key="sow_id" value="AICS-010-015"/></element>
+    <element xsi:type="BusinessFunction" id="AICS-016-017" name="AICS-016-017 意图识别与转接"><property key="sow_id" value="AICS-016-017"/></element>
+    <element xsi:type="BusinessFunction" id="AICS-018-019" name="AICS-018-019 智能体业务应答"><property key="sow_id" value="AICS-018-019"/></element>
+    <element xsi:type="BusinessFunction" id="AICS-020-023" name="AICS-020-023 知识库管理"><property key="sow_id" value="AICS-020-023"/></element>
+    <element xsi:type="BusinessFunction" id="AICS-024-025" name="AICS-024-025 智能客服维护"><property key="sow_id" value="AICS-024-025"/></element>
+    <element xsi:type="BusinessFunction" id="AICS-026-028" name="AICS-026-028 基础设置"><property key="sow_id" value="AICS-026-028"/></element>
+    <element xsi:type="BusinessFunction" id="AICS-029" name="AICS-029 报表分析"><property key="sow_id" value="AICS-029"/></element>
+  </folder>
+  <folder name="Application" type="application">
+    <element xsi:type="ApplicationComponent" id="COMP-01" name="COMP-01"><property key="prd" value="01-prd/商品中台/AIP-001-002-商品库管理.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-02" name="COMP-02"><property key="prd" value="../类目治理智能体产品文档.md"/><property key="legacy" value="true"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-03" name="COMP-03"><property key="prd" value="../ATTRIBUTE_EXTRACTION_PRD.md"/><property key="legacy" value="true"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-04" name="COMP-04"><property key="prd" value="01-prd/商品中台/AIP-007-商品图文审核.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-05" name="COMP-05"><property key="prd" value="01-prd/商品中台/AIP-008-描述规范性校验.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-06" name="COMP-06"><property key="prd" value="01-prd/商品中台/AIP-010-同款精确匹配.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-07" name="COMP-07"><property key="prd" value="01-prd/商品中台/AIP-011-SEO标题生成.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-08" name="COMP-08"><property key="prd" value="01-prd/商品中台/AIP-014-集采合规管控.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-09" name="COMP-09"><property key="prd" value="01-prd/搜索中台/AIP-015-语义检索与Query理解.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-10" name="COMP-10"><property key="prd" value="01-prd/搜索中台/AIP-016-017-输入补全与智能纠错.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-11" name="COMP-11"><property key="prd" value="01-prd/搜索中台/AIP-018-020-筛选面板与属性聚合.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-12" name="COMP-12"><property key="prd" value="01-prd/搜索中台/AIP-021-多维排序.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-13" name="COMP-13"><property key="prd" value="01-prd/搜索中台/AIP-022-023-类目品牌推荐.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-14" name="COMP-14"><property key="prd" value="01-prd/搜索中台/AIP-024-028-AI对话导购.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-15" name="COMP-15"><property key="prd" value="01-prd/搜索中台/AIP-029-031-AI猜你喜欢.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-16" name="COMP-16"><property key="prd" value="01-prd/客服中台/AICS-001-009-双通道在线客服底座.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-17" name="COMP-17"><property key="prd" value="01-prd/客服中台/AICS-010-015-人工接待.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-18" name="COMP-18"><property key="prd" value="01-prd/客服中台/AICS-016-025-智能体接待.md"/></element>
+    <element xsi:type="ApplicationComponent" id="COMP-19" name="COMP-19"><property key="prd" value="01-prd/客服中台/AICS-026-029-基础设置与报表.md"/></element>
+  </folder>
+  <folder name="Technology" type="technology">
+    <element xsi:type="Artifact" id="COMP-01-T1" name="gov_product 治理三态"/>
+    <element xsi:type="Artifact" id="COMP-01-T2" name="product_listing staging"/>
+    <element xsi:type="Artifact" id="COMP-01-T3" name="DDL 顺序迁移体系"/>
+    <element xsi:type="Artifact" id="COMP-01-T4" name="导入对账 fail-loud"/>
+    <element xsi:type="Artifact" id="COMP-02-T1" name="gov_category_tree poly 6495叶"/>
+    <element xsi:type="Artifact" id="COMP-02-T2" name="taxonomy_event 户口本"/>
+    <element xsi:type="Artifact" id="COMP-02-T3" name="类目预测端点 auto 80.4%"/>
+    <element xsi:type="Artifact" id="COMP-03-T1" name="category_attribute_schema"/>
+    <element xsi:type="Artifact" id="COMP-03-T2" name="extract-attributes 端点"/>
+    <element xsi:type="Artifact" id="COMP-03-T3" name="std_title 176074 全量"/>
+    <element xsi:type="Artifact" id="COMP-04-T1" name="commit 端点违禁 409"/>
+    <element xsi:type="Artifact" id="COMP-04-T2" name="product_review_log"/>
+    <element xsi:type="Artifact" id="COMP-04-T3" name="审核队列/agent-review-batch"/>
+    <element xsi:type="Artifact" id="COMP-04-T4" name="人审工作台 resolve"/>
+    <element xsi:type="Artifact" id="COMP-04-T5" name="违禁词库(待建 P0)"/>
+    <element xsi:type="Artifact" id="COMP-05-T1" name="norm_rule 规则配置"/>
+    <element xsi:type="Artifact" id="COMP-05-T2" name="品牌归一 13128"/>
+    <element xsi:type="Artifact" id="COMP-05-T3" name="std_title 归一规则"/>
+    <element xsi:type="Artifact" id="COMP-05-T4" name="TCCC 阈值校准先例"/>
+    <element xsi:type="Artifact" id="COMP-04-T1" name="commit 端点违禁 409"/>
+    <element xsi:type="Artifact" id="COMP-04-T2" name="product_review_log"/>
+    <element xsi:type="Artifact" id="COMP-04-T3" name="审核队列/agent-review-batch"/>
+    <element xsi:type="Artifact" id="COMP-04-T4" name="人审工作台 resolve"/>
+    <element xsi:type="Artifact" id="COMP-04-T5" name="违禁词库(待建 P0)"/>
+    <element xsi:type="Artifact" id="COMP-06-T1" name="ES 同款簇"/>
+    <element xsi:type="Artifact" id="COMP-06-T2" name="commit 同款门禁实测拦截6件"/>
+    <element xsi:type="Artifact" id="COMP-06-T3" name="std_title 向量"/>
+    <element xsi:type="Artifact" id="COMP-07-T1" name="std_title 资产"/>
+    <element xsi:type="Artifact" id="COMP-07-T2" name="属性 Schema 约束"/>
+    <element xsi:type="Artifact" id="COMP-07-T3" name="LiteLLM 网关"/>
+    <element xsi:type="Artifact" id="COMP-03-T1" name="category_attribute_schema"/>
+    <element xsi:type="Artifact" id="COMP-03-T2" name="extract-attributes 端点"/>
+    <element xsi:type="Artifact" id="COMP-03-T3" name="std_title 176074 全量"/>
+    <element xsi:type="Artifact" id="COMP-05-T1" name="norm_rule 规则配置"/>
+    <element xsi:type="Artifact" id="COMP-05-T2" name="品牌归一 13128"/>
+    <element xsi:type="Artifact" id="COMP-05-T3" name="std_title 归一规则"/>
+    <element xsi:type="Artifact" id="COMP-05-T4" name="TCCC 阈值校准先例"/>
+    <element xsi:type="Artifact" id="COMP-08-T1" name="zen-engine 规则引擎"/>
+    <element xsi:type="Artifact" id="COMP-08-T2" name="handoff fail-safe 判例"/>
+    <element xsi:type="Artifact" id="COMP-08-T3" name="rule_eval_log(待建)"/>
+    <element xsi:type="Artifact" id="COMP-09-T1" name="ES synonym_graph 热更新"/>
+    <element xsi:type="Artifact" id="COMP-09-T2" name="Milvus 176074 向量"/>
+    <element xsi:type="Artifact" id="COMP-09-T3" name="SXJG→三雄极光 实测"/>
+    <element xsi:type="Artifact" id="COMP-09-T4" name="search_log(待建 P1)"/>
+    <element xsi:type="Artifact" id="COMP-10-T1" name="gov_synonym poly 重锚定 2124"/>
+    <element xsi:type="Artifact" id="COMP-10-T2" name="ES suggester(待接)"/>
+    <element xsi:type="Artifact" id="COMP-10-T3" name="搜索日志(待建 P1)"/>
+    <element xsi:type="Artifact" id="COMP-11-T1" name="gov_category_tree 6495叶"/>
+    <element xsi:type="Artifact" id="COMP-11-T2" name="品牌归一 13128"/>
+    <element xsi:type="Artifact" id="COMP-11-T3" name="category_attribute_schema(重建中)"/>
+    <element xsi:type="Artifact" id="COMP-12-T1" name="QP 双路融合"/>
+    <element xsi:type="Artifact" id="COMP-12-T2" name="历史订单 gold 192万行"/>
+    <element xsi:type="Artifact" id="COMP-12-T3" name="GrowthBook A/B"/>
+    <element xsi:type="Artifact" id="COMP-12-T4" name="曝光日志(待建)"/>
+    <element xsi:type="Artifact" id="COMP-13-T1" name="predict-category 端点 @1=62.7%"/>
+    <element xsi:type="Artifact" id="COMP-13-T2" name="品牌归一 13128"/>
+    <element xsi:type="Artifact" id="COMP-14-T1" name="采购解析 MVP-1 1.1s"/>
+    <element xsi:type="Artifact" id="COMP-14-T2" name="推荐出口 MVP-2 2.4s"/>
+    <element xsi:type="Artifact" id="COMP-14-T3" name="portal 转发路由"/>
+    <element xsi:type="Artifact" id="COMP-15-T1" name="past_orders gold 星型 dim_product 40万"/>
+    <element xsi:type="Artifact" id="COMP-15-T2" name="双路检索"/>
+    <element xsi:type="Artifact" id="COMP-16-T1" name="Chatwoot v4.17.1 ADR-001"/>
+    <element xsi:type="Artifact" id="COMP-16-T2" name="webhook 适配器 ADR-008"/>
+    <element xsi:type="Artifact" id="COMP-16-T3" name="portal #/kb"/>
+    <element xsi:type="Artifact" id="COMP-16-T4" name="widget demo 8005"/>
+    <element xsi:type="Artifact" id="COMP-17-T1" name="Chatwoot 坐席台"/>
+    <element xsi:type="Artifact" id="COMP-17-T2" name="conv6 四动作实测"/>
+    <element xsi:type="Artifact" id="COMP-17-T3" name="回复建议引擎 :8003 909ms"/>
+    <element xsi:type="Artifact" id="COMP-18-T1" name="faq_kb 35条 命中0.911"/>
+    <element xsi:type="Artifact" id="COMP-18-T2" name="handoff 硬规则修复"/>
+    <element xsi:type="Artifact" id="COMP-18-T3" name="conv7 多轮实测"/>
+    <element xsi:type="Artifact" id="COMP-18-T4" name="chatwoot_sync 6秒"/>
+    <element xsi:type="Artifact" id="COMP-18-T1" name="faq_kb 35条 命中0.911"/>
+    <element xsi:type="Artifact" id="COMP-18-T2" name="handoff 硬规则修复"/>
+    <element xsi:type="Artifact" id="COMP-18-T3" name="conv7 多轮实测"/>
+    <element xsi:type="Artifact" id="COMP-18-T4" name="chatwoot_sync 6秒"/>
+    <element xsi:type="Artifact" id="COMP-18-T1" name="faq_kb 35条 命中0.911"/>
+    <element xsi:type="Artifact" id="COMP-18-T2" name="handoff 硬规则修复"/>
+    <element xsi:type="Artifact" id="COMP-18-T3" name="conv7 多轮实测"/>
+    <element xsi:type="Artifact" id="COMP-18-T4" name="chatwoot_sync 6秒"/>
+    <element xsi:type="Artifact" id="COMP-18-T1" name="faq_kb 35条 命中0.911"/>
+    <element xsi:type="Artifact" id="COMP-18-T2" name="handoff 硬规则修复"/>
+    <element xsi:type="Artifact" id="COMP-18-T3" name="conv7 多轮实测"/>
+    <element xsi:type="Artifact" id="COMP-18-T4" name="chatwoot_sync 6秒"/>
+    <element xsi:type="Artifact" id="COMP-19-T1" name="平台控制面 DQ/评测/口径三注册表"/>
+    <element xsi:type="Artifact" id="COMP-19-T2" name="portal 体检页"/>
+    <element xsi:type="Artifact" id="COMP-19-T3" name="报表物化(待建)"/>
+    <element xsi:type="Artifact" id="COMP-19-T1" name="平台控制面 DQ/评测/口径三注册表"/>
+    <element xsi:type="Artifact" id="COMP-19-T2" name="portal 体检页"/>
+    <element xsi:type="Artifact" id="COMP-19-T3" name="报表物化(待建)"/>
+  </folder>
+  <folder name="Relations" type="relations">
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-001-002-S-01" source="AIP-001-002" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-001-002-S-07" source="AIP-001-002" target="S-07"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-003-004-S-01" source="AIP-003-004" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-003-004-S-07" source="AIP-003-004" target="S-07"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-005-006-S-01" source="AIP-005-006" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-005-006-S-07" source="AIP-005-006" target="S-07"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-007-S-01" source="AIP-007" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-007-S-09" source="AIP-007" target="S-09"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-008-S-01" source="AIP-008" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-008-S-07" source="AIP-008" target="S-07"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-009-S-01" source="AIP-009" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-009-S-09" source="AIP-009" target="S-09"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-010-S-01" source="AIP-010" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-010-S-03" source="AIP-010" target="S-03"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-010-S-07" source="AIP-010" target="S-07"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-011-S-01" source="AIP-011" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-011-S-03" source="AIP-011" target="S-03"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-012-S-01" source="AIP-012" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-012-S-07" source="AIP-012" target="S-07"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-013-S-01" source="AIP-013" target="S-01"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-013-S-07" source="AIP-013" target="S-07"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-014-S-06" source="AIP-014" target="S-06"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-015-S-02" source="AIP-015" target="S-02"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-015-S-03" source="AIP-015" target="S-03"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-016-017-S-03" source="AIP-016-017" target="S-03"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-018-020-S-03" source="AIP-018-020" target="S-03"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-021-S-03" source="AIP-021" target="S-03"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-021-S-08" source="AIP-021" target="S-08"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-022-023-S-03" source="AIP-022-023" target="S-03"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-022-023-S-08" source="AIP-022-023" target="S-08"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-024-028-S-02" source="AIP-024-028" target="S-02"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-029-031-S-02" source="AIP-029-031" target="S-02"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-029-031-S-03" source="AIP-029-031" target="S-03"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AIP-029-031-S-08" source="AIP-029-031" target="S-08"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-001-009-S-04" source="AICS-001-009" target="S-04"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-001-009-S-05" source="AICS-001-009" target="S-05"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-010-015-S-05" source="AICS-010-015" target="S-05"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-010-015-S-04" source="AICS-010-015" target="S-04"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-016-017-S-04" source="AICS-016-017" target="S-04"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-016-017-S-05" source="AICS-016-017" target="S-05"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-018-019-S-04" source="AICS-018-019" target="S-04"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-020-023-S-04" source="AICS-020-023" target="S-04"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-020-023-S-08" source="AICS-020-023" target="S-08"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-024-025-S-10" source="AICS-024-025" target="S-10"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-026-028-S-10" source="AICS-026-028" target="S-10"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-AICS-029-S-10" source="AICS-029" target="S-10"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-01-AIP-001-002" source="COMP-01" target="AIP-001-002"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-01-T1" source="COMP-01" target="COMP-01-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-01-T2" source="COMP-01" target="COMP-01-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-01-T3" source="COMP-01" target="COMP-01-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-01-T4" source="COMP-01" target="COMP-01-T4"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-02-AIP-003-004" source="COMP-02" target="AIP-003-004"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-02-T1" source="COMP-02" target="COMP-02-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-02-T2" source="COMP-02" target="COMP-02-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-02-T3" source="COMP-02" target="COMP-02-T3"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-03-AIP-005-006" source="COMP-03" target="AIP-005-006"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-03-T1" source="COMP-03" target="COMP-03-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-03-T2" source="COMP-03" target="COMP-03-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-03-T3" source="COMP-03" target="COMP-03-T3"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-04-AIP-007" source="COMP-04" target="AIP-007"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T1" source="COMP-04" target="COMP-04-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T2" source="COMP-04" target="COMP-04-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T3" source="COMP-04" target="COMP-04-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T4" source="COMP-04" target="COMP-04-T4"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T5" source="COMP-04" target="COMP-04-T5"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-05-AIP-008" source="COMP-05" target="AIP-008"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-05-T1" source="COMP-05" target="COMP-05-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-05-T2" source="COMP-05" target="COMP-05-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-05-T3" source="COMP-05" target="COMP-05-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-05-T4" source="COMP-05" target="COMP-05-T4"/>
+    <relationship xsi:type="ServingRelationship" id="rel-COMP-04-AIP-009" source="COMP-04" target="AIP-009"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T1" source="COMP-04" target="COMP-04-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T2" source="COMP-04" target="COMP-04-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T3" source="COMP-04" target="COMP-04-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T4" source="COMP-04" target="COMP-04-T4"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-04-T5" source="COMP-04" target="COMP-04-T5"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-06-AIP-010" source="COMP-06" target="AIP-010"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-06-T1" source="COMP-06" target="COMP-06-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-06-T2" source="COMP-06" target="COMP-06-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-06-T3" source="COMP-06" target="COMP-06-T3"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-07-AIP-011" source="COMP-07" target="AIP-011"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-07-T1" source="COMP-07" target="COMP-07-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-07-T2" source="COMP-07" target="COMP-07-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-07-T3" source="COMP-07" target="COMP-07-T3"/>
+    <relationship xsi:type="ServingRelationship" id="rel-COMP-03-AIP-012" source="COMP-03" target="AIP-012"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-03-T1" source="COMP-03" target="COMP-03-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-03-T2" source="COMP-03" target="COMP-03-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-03-T3" source="COMP-03" target="COMP-03-T3"/>
+    <relationship xsi:type="ServingRelationship" id="rel-COMP-05-AIP-013" source="COMP-05" target="AIP-013"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-05-T1" source="COMP-05" target="COMP-05-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-05-T2" source="COMP-05" target="COMP-05-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-05-T3" source="COMP-05" target="COMP-05-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-05-T4" source="COMP-05" target="COMP-05-T4"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-08-AIP-014" source="COMP-08" target="AIP-014"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-08-T1" source="COMP-08" target="COMP-08-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-08-T2" source="COMP-08" target="COMP-08-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-08-T3" source="COMP-08" target="COMP-08-T3"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-09-AIP-015" source="COMP-09" target="AIP-015"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-09-T1" source="COMP-09" target="COMP-09-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-09-T2" source="COMP-09" target="COMP-09-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-09-T3" source="COMP-09" target="COMP-09-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-09-T4" source="COMP-09" target="COMP-09-T4"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-10-AIP-016-017" source="COMP-10" target="AIP-016-017"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-10-T1" source="COMP-10" target="COMP-10-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-10-T2" source="COMP-10" target="COMP-10-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-10-T3" source="COMP-10" target="COMP-10-T3"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-11-AIP-018-020" source="COMP-11" target="AIP-018-020"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-11-T1" source="COMP-11" target="COMP-11-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-11-T2" source="COMP-11" target="COMP-11-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-11-T3" source="COMP-11" target="COMP-11-T3"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-12-AIP-021" source="COMP-12" target="AIP-021"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-12-T1" source="COMP-12" target="COMP-12-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-12-T2" source="COMP-12" target="COMP-12-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-12-T3" source="COMP-12" target="COMP-12-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-12-T4" source="COMP-12" target="COMP-12-T4"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-13-AIP-022-023" source="COMP-13" target="AIP-022-023"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-13-T1" source="COMP-13" target="COMP-13-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-13-T2" source="COMP-13" target="COMP-13-T2"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-14-AIP-024-028" source="COMP-14" target="AIP-024-028"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-14-T1" source="COMP-14" target="COMP-14-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-14-T2" source="COMP-14" target="COMP-14-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-14-T3" source="COMP-14" target="COMP-14-T3"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-15-AIP-029-031" source="COMP-15" target="AIP-029-031"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-15-T1" source="COMP-15" target="COMP-15-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-15-T2" source="COMP-15" target="COMP-15-T2"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-16-AICS-001-009" source="COMP-16" target="AICS-001-009"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-16-T1" source="COMP-16" target="COMP-16-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-16-T2" source="COMP-16" target="COMP-16-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-16-T3" source="COMP-16" target="COMP-16-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-16-T4" source="COMP-16" target="COMP-16-T4"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-17-AICS-010-015" source="COMP-17" target="AICS-010-015"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-17-T1" source="COMP-17" target="COMP-17-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-17-T2" source="COMP-17" target="COMP-17-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-17-T3" source="COMP-17" target="COMP-17-T3"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-18-AICS-016-017" source="COMP-18" target="AICS-016-017"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T1" source="COMP-18" target="COMP-18-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T2" source="COMP-18" target="COMP-18-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T3" source="COMP-18" target="COMP-18-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T4" source="COMP-18" target="COMP-18-T4"/>
+    <relationship xsi:type="ServingRelationship" id="rel-COMP-18-AICS-018-019" source="COMP-18" target="AICS-018-019"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T1" source="COMP-18" target="COMP-18-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T2" source="COMP-18" target="COMP-18-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T3" source="COMP-18" target="COMP-18-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T4" source="COMP-18" target="COMP-18-T4"/>
+    <relationship xsi:type="ServingRelationship" id="rel-COMP-18-AICS-020-023" source="COMP-18" target="AICS-020-023"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T1" source="COMP-18" target="COMP-18-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T2" source="COMP-18" target="COMP-18-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T3" source="COMP-18" target="COMP-18-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T4" source="COMP-18" target="COMP-18-T4"/>
+    <relationship xsi:type="ServingRelationship" id="rel-COMP-18-AICS-024-025" source="COMP-18" target="AICS-024-025"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T1" source="COMP-18" target="COMP-18-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T2" source="COMP-18" target="COMP-18-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T3" source="COMP-18" target="COMP-18-T3"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-18-T4" source="COMP-18" target="COMP-18-T4"/>
+    <relationship xsi:type="RealizationRelationship" id="rel-COMP-19-AICS-026-028" source="COMP-19" target="AICS-026-028"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-19-T1" source="COMP-19" target="COMP-19-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-19-T2" source="COMP-19" target="COMP-19-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-19-T3" source="COMP-19" target="COMP-19-T3"/>
+    <relationship xsi:type="ServingRelationship" id="rel-COMP-19-AICS-029" source="COMP-19" target="AICS-029"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-19-T1" source="COMP-19" target="COMP-19-T1"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-19-T2" source="COMP-19" target="COMP-19-T2"/>
+    <relationship xsi:type="CompositionRelationship" id="rel-COMP-19-T3" source="COMP-19" target="COMP-19-T3"/>
+  </folder>
+</archimate:model>

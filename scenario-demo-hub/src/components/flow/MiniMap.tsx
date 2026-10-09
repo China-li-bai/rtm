@@ -62,7 +62,7 @@ export function MiniMap({ worldW, worldH, lanes, nodes, visible, byId, selectedI
         })}
         {nodes.map((n) => (
           <rect key={`mm-${n.id}`} x={n.x} y={n.y} width={n.w} height={nodeH(n)} rx={6}
-            fill={n.id === selectedId ? "#ff4b16" : n.kind === "bar" ? "#ffd8c7" : "#ffffff"}
+            fill={n.id === selectedId ? "#ff4b16" : n.kind === "bar" ? "#ffd8c7" : n.kind === "boundary" ? "#dfe4ea" : "#ffffff"}
             stroke="#b8bfc8" strokeWidth={1} />
         ))}
         <rect className="mm-vp" x={view.vx} y={view.vy} width={view.vw} height={view.vh} rx={4} />

@@ -62,3 +62,7 @@ gui-test-screenshots/
 
 # 大体积数据文件（DuckDB 证据层，2026-09-17 起不入库——GitHub 单文件 100MB 上限；
 
+# docx 修订工具链的临时依赖与检查点备份（2026-10-08）
+/.pylibs/
+/_backup/
+

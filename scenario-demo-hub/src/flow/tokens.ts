@@ -53,6 +53,8 @@ export const NODE_DEFAULT_H: Record<FlowNode["kind"], number> = {
   normal: 76,
   highlight: 76,
   dashed: 76,
+  /** 边界声明位（刻意不做）：默认高度同 normal，实际由 predictNodeH 按内容计算 */
+  boundary: 76,
   diamond: 58,
   bar: 44,
   loopchip: 32,

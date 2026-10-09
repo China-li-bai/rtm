@@ -1,0 +1,75 @@
+# 需求追溯模型（Single Source of Truth）——S/CAP/COMP/TECH/AC 五层链接数据库
+# 规则见同目录 README.md；生成器 scripts/gen_rtm.py 对本文件做八条完备性审计（fail-loud）
+# 纪律：新增功能点 = 本文件加 CAP + 加 COMP（或挂既有 COMP）→ gen_rtm.py 审计 → 立 PRD 卡
+
+meta:
+  project: 保利物业和采商城 AI 专项
+  version: v1.0
+  updated: 2026-09-26
+  cap_universe:   # R7 编号守恒的期望全集
+    AIP: [1, 31]
+    AICS: [1, 29]
+
+scenarios:
+  S-01: {name: 供应商推品上架, goal: 推品合规、快速进入标准商品池}
+  S-02: {name: 自然语言找货下单, goal: 说人话就能找到货并下单}
+  S-03: {name: 关键词搜索比选, goal: 关键词找货、筛选比选锁定目标}
+  S-04: {name: 客服咨询即答, goal: 商品/订单/FAQ 秒级可溯源回答}
+  S-05: {name: 售后与转人工, goal: 投诉纠纷有人接、夜间不丢件}
+  S-06: {name: 集采专区合规采买, goal: 集采行为全程规则管控}
+  S-07: {name: 存量商品清洗治理, goal: 存量数据达到上架标准}
+  S-08: {name: 数据飞轮持续优化, goal: 行为与坏案例回流让三家越用越强}
+  S-09: {name: 审核运营与供应商协同, goal: 驳回有原因、反馈有闭环、质量可度量}
+  S-10: {name: 客服运营管理, goal: 量、质、风险可管理可汇报}
+
+# CAP：60 项业务能力。id 用合同编号（不自造）；scenarios=R2 向上追溯；comp=satisfy 的组件
+capabilities:
+  AIP-001-002: {name: 商品库管理, scenarios: [S-01, S-07], comp: COMP-01}
+  AIP-003-004: {name: 类目治理, scenarios: [S-01, S-07], comp: COMP-02}
+  AIP-005-006: {name: 属性治理, scenarios: [S-01, S-07], comp: COMP-03}
+  AIP-007:     {name: 商品图文审核, scenarios: [S-01, S-09], comp: COMP-04}
+  AIP-008:     {name: 描述规范性校验, scenarios: [S-01, S-07], comp: COMP-05}
+  AIP-009:     {name: 审核结果分类展示, scenarios: [S-01, S-09], comp: COMP-04}
+  AIP-010:     {name: 同款精确匹配, scenarios: [S-01, S-03, S-07], comp: COMP-06}
+  AIP-011:     {name: SEO 标题生成, scenarios: [S-01, S-03], comp: COMP-07}
+  AIP-012:     {name: 属性自动提取, scenarios: [S-01, S-07], comp: COMP-03}
+  AIP-013:     {name: 属性合理性检测, scenarios: [S-01, S-07], comp: COMP-05}
+  AIP-014:     {name: 集采合规管控, scenarios: [S-06], comp: COMP-08}
+  AIP-015:     {name: 智能分词与语义理解, scenarios: [S-02, S-03], comp: COMP-09}
+  AIP-016-017: {name: 输入补全与智能纠错, scenarios: [S-03], comp: COMP-10}
+  AIP-018-020: {name: 类目品牌筛选与属性聚合, scenarios: [S-03], comp: COMP-11}
+  AIP-021:     {name: 多维度排序, scenarios: [S-03, S-08], comp: COMP-12}
+  AIP-022-023: {name: 类目与品牌自动推荐, scenarios: [S-03, S-08], comp: COMP-13}
+  AIP-024-028: {name: AI 对话导购, scenarios: [S-02], comp: COMP-14}
+  AIP-029-031: {name: AI 猜你喜欢, scenarios: [S-02, S-03, S-08], comp: COMP-15}
+  AICS-001-009: {name: 在线客服底座, scenarios: [S-04, S-05], comp: COMP-16}
+  AICS-010-015: {name: 人工接待, scenarios: [S-05, S-04], comp: COMP-17}
+  AICS-016-017: {name: 意图识别与转接, scenarios: [S-04, S-05], comp: COMP-18}
+  AICS-018-019: {name: 智能体业务应答, scenarios: [S-04], comp: COMP-18}
+  AICS-020-023: {name: 知识库管理, scenarios: [S-04, S-08], comp: COMP-18}
+  AICS-024-025: {name: 智能客服维护, scenarios: [S-10], comp: COMP-18}
+  AICS-026-028: {name: 基础设置, scenarios: [S-10], comp: COMP-19}
+  AICS-029:     {name: 报表分析, scenarios: [S-10], comp: COMP-19}
+
+# COMP：19 个技术组件（=19 张 PRD 卡）。tech=技术锚点指针（真实资产名，不复制口径）
+# acs/frs 不手写——生成器直接从 PRD 卡文件解析计数（R6 证据化）；存量卡标 legacy: true
+components:
+  COMP-01: {card: 01-prd/商品中台/AIP-001-002-商品库管理.md, tech: [gov_product 治理三态, product_listing staging, DDL 顺序迁移体系, 导入对账 fail-loud]}
+  COMP-02: {card: ../类目治理智能体产品文档.md, legacy: true, tech: [gov_category_tree poly 6495叶, taxonomy_event 户口本, 类目预测端点 auto 80.4%]}
+  COMP-03: {card: ../ATTRIBUTE_EXTRACTION_PRD.md, legacy: true, tech: [category_attribute_schema, extract-attributes 端点, std_title 176074 全量]}
+  COMP-04: {card: 01-prd/商品中台/AIP-007-商品图文审核.md, tech: [commit 端点违禁 409, product_review_log, 审核队列/agent-review-batch, 人审工作台 resolve, 违禁词库(待建 P0)]}
+  COMP-05: {card: 01-prd/商品中台/AIP-008-描述规范性校验.md, tech: [norm_rule 规则配置, 品牌归一 13128, std_title 归一规则, TCCC 阈值校准先例]}
+  COMP-06: {card: 01-prd/商品中台/AIP-010-同款精确匹配.md, tech: [ES 同款簇, commit 同款门禁实测拦截6件, std_title 向量]}
+  COMP-07: {card: 01-prd/商品中台/AIP-011-SEO标题生成.md, tech: [std_title 资产, 属性 Schema 约束, LiteLLM 网关]}
+  COMP-08: {card: 01-prd/商品中台/AIP-014-集采合规管控.md, tech: [zen-engine 规则引擎, handoff fail-safe 判例, rule_eval_log(待建)]}
+  COMP-09: {card: 01-prd/搜索中台/AIP-015-语义检索与Query理解.md, tech: [ES synonym_graph 热更新, Milvus 176074 向量, SXJG→三雄极光 实测, search_log(待建 P1)]}
+  COMP-10: {card: 01-prd/搜索中台/AIP-016-017-输入补全与智能纠错.md, tech: [gov_synonym poly 重锚定 2124, ES suggester(待接), 搜索日志(待建 P1)]}
+  COMP-11: {card: 01-prd/搜索中台/AIP-018-020-筛选面板与属性聚合.md, tech: [gov_category_tree 6495叶, 品牌归一 13128, category_attribute_schema(重建中)]}
+  COMP-12: {card: 01-prd/搜索中台/AIP-021-多维排序.md, tech: [QP 双路融合, 历史订单 gold 192万行, GrowthBook A/B, 曝光日志(待建)]}
+  COMP-13: {card: 01-prd/搜索中台/AIP-022-023-类目品牌推荐.md, tech: [predict-category 端点 @1=62.7%, 品牌归一 13128]}
+  COMP-14: {card: 01-prd/搜索中台/AIP-024-028-AI对话导购.md, tech: [采购解析 MVP-1 1.1s, 推荐出口 MVP-2 2.4s, portal 转发路由]}
+  COMP-15: {card: 01-prd/搜索中台/AIP-029-031-AI猜你喜欢.md, tech: [past_orders gold 星型 dim_product 40万, 双路检索]}
+  COMP-16: {card: 01-prd/客服中台/AICS-001-009-双通道在线客服底座.md, tech: [Chatwoot v4.17.1 ADR-001, webhook 适配器 ADR-008, portal #/kb, widget demo 8005]}
+  COMP-17: {card: 01-prd/客服中台/AICS-010-015-人工接待.md, tech: [Chatwoot 坐席台, conv6 四动作实测, 回复建议引擎 :8003 909ms]}
+  COMP-18: {card: 01-prd/客服中台/AICS-016-025-智能体接待.md, tech: [faq_kb 35条 命中0.911, handoff 硬规则修复, conv7 多轮实测, chatwoot_sync 6秒]}
+  COMP-19: {card: 01-prd/客服中台/AICS-026-029-基础设置与报表.md, tech: [平台控制面 DQ/评测/口径三注册表, portal 体检页, 报表物化(待建)]}

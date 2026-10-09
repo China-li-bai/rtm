@@ -1,0 +1,1 @@
+import{t as e}from"./main-C20hsl9w.js";var t={default:async()=>await e(()=>import(`./drawio-CWc4w-Yc.js`),[])};async function n(e){let n=t[e];if(!n){let n=Object.keys(t);throw console.error(`Unknown projectId: `+e+` (available: `+n+`)`),Error(`Project does not enable drawio export: `+e)}return await n()}export{n as loadDrawioSources};
