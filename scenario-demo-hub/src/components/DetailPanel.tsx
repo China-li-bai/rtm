@@ -26,7 +26,7 @@ export function DetailPanel({ node, refs, onOpenRef }: Props) {
         })}
       </div>
 
-      <div className="sec-t">■ 解决的场景 / 约束（点徽章看完整场景）</div>
+      <div className="sec-t">■ 本节点关联的业务场景 / 规则约束</div>
       <div className="svwrap">
         {node.solves.map((s) => {
           const r = refs.get(s.ref);
@@ -36,10 +36,10 @@ export function DetailPanel({ node, refs, onOpenRef }: Props) {
               <div className="sv-h">
                 <span className={`bdg ${r.cls}`} onClick={() => onOpenRef(s.ref)}>{r.badge}</span>
                 <b>{r.full}</b>
-                <span className="more" onClick={() => onOpenRef(s.ref)}>完整场景与解决方案 ↗</span>
+                <span className="more" onClick={() => onOpenRef(s.ref)}>查看完整场景 ↗</span>
               </div>
               <div className="sv-story">{r.card}</div>
-              <div className="sv-how"><b>→ 本环节针对性解法：</b>{s.how}</div>
+              <div className="sv-how"><b>→ 本节点如何承接：</b>{s.how}</div>
             </div>
           );
         })}

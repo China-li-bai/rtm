@@ -7,7 +7,7 @@ import { RefModal } from "../components/RefModal";
 import { buildRefs } from "../lib/refs";
 import { rich } from "../lib/rich";
 import { useScale } from "../lib/useScale";
-import type { ScenarioConfig } from "../schema/scenario";
+import type { FlowNode, ScenarioConfig } from "../schema/scenario";
 
 /** 三段叙事章节：痛点（为什么）→ 流程（怎么做）→ 对比（带来什么） */
 const SECTIONS = [
@@ -26,6 +26,7 @@ export function ScenarioPage({ cfg }: { cfg: ScenarioConfig }) {
   const [selectedId, setSelectedId] = useState<string | null>(cfg.flow.defaultSelected ?? null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [modalRef, setModalRef] = useState<string | null>(null);
+  const [modalNodeContext, setModalNodeContext] = useState<FlowNode | null>(null);
   const [active, setActive] = useState<SectionKey>("pain");
   const { outerRef, innerRef, scale } = useScale(cfg.flow.width);
   const secRefs = useRef<Partial<Record<SectionKey, HTMLElement | null>>>({});
@@ -76,6 +77,12 @@ export function ScenarioPage({ cfg }: { cfg: ScenarioConfig }) {
     if (id) setDrawerOpen(true);
   };
 
+  /** 打开场景/约束弹窗：从节点详情打开时携带该节点，弹窗顶部展示其针对性承接（how）；从痛点卡片打开不带上下文 */
+  const openRef = (refId: string, contextNode: FlowNode | null = null) => {
+    setModalNodeContext(contextNode);
+    setModalRef(refId);
+  };
+
   return (
     <div className="scale-outer" ref={outerRef}>
       <nav className="topbar">
@@ -107,7 +114,7 @@ export function ScenarioPage({ cfg }: { cfg: ScenarioConfig }) {
             {cfg.scenarios.map((s) => {
               const r = refs.get(s.id)!;
               return (
-                <div className="wc scn" key={s.id} onClick={() => setModalRef(s.id)}>
+                <div className="wc scn" key={s.id} onClick={() => openRef(s.id, null)}>
                   <div className="row1">
                     <span className="chip-s s">{r.chip}</span>
                     <span className="name">{s.name}</span>
@@ -121,7 +128,7 @@ export function ScenarioPage({ cfg }: { cfg: ScenarioConfig }) {
             {cfg.constraints.map((c) => {
               const r = refs.get(c.id)!;
               return (
-                <div className="wc con" key={c.id} onClick={() => setModalRef(c.id)}>
+                <div className="wc con" key={c.id} onClick={() => openRef(c.id, null)}>
                   <div className="row1">
                     <span className="chip-s c">{r.chip}</span>
                     <span className="name">{c.name}</span>
@@ -163,12 +170,23 @@ export function ScenarioPage({ cfg }: { cfg: ScenarioConfig }) {
           <div className="drawer-mask" onClick={() => setDrawerOpen(false)} />
           <aside className="drawer">
             <button className="drawer-close" onClick={() => setDrawerOpen(false)} aria-label="关闭详情">✕</button>
-            <DetailPanel node={selected} refs={refs} onOpenRef={setModalRef} />
+            <DetailPanel node={selected} refs={refs} onOpenRef={(refId) => openRef(refId, selected)} />
           </aside>
         </>
       )}
 
-      {modalRef && <RefModal refId={modalRef} cfg={cfg} refs={refs} onClose={() => setModalRef(null)} />}
+      {modalRef && (
+        <RefModal
+          refId={modalRef}
+          cfg={cfg}
+          refs={refs}
+          contextNode={modalNodeContext}
+          onClose={() => {
+            setModalRef(null);
+            setModalNodeContext(null);
+          }}
+        />
+      )}
     </div>
   );
 }

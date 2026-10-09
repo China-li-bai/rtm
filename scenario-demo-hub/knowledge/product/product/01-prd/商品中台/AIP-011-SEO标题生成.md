@@ -1,7 +1,8 @@
 # SEO 标题自动生成（AIP-011）
 
 > 节点段：12/20 UAT（功能完善段 11/15–12/5）｜ Owner：AI 产品负责人 ｜ 评审：采购业务对接人（搜索侧联审）
-> 状态：v0.3（2026-09-26，完整版立卡）
+> 范围：SOW 合同能力（COMP-07）｜ 文档状态：**Frozen v1.0**（2026-10-09 冻结；签署记录见 ../../PRD-REVIEW-CHECKLIST.md）
+> 实现进度见 `docs/STATUS.md`；本文只维护需求定义与验收契约
 
 ## 1 概述（TL;DR）
 
@@ -87,11 +88,12 @@ AI 功能位置：候选列即生成结果；行内"采纳/编辑/重生成"三�
 
 ### 6.3 字段与数据（Field Schema）
 
-| 对象 | 字段 | 说明 |
-|---|---|---|
-| 标题版本（seo_title） | sku / style（brief/detail）/ content / status（candidate/active/retired）/ prompt_version / created_by | 版本化 |
-| 偏好样本（seo_edit_sample） | sku / candidate / human_edited / diff_note | Prompt 迭代语料 |
-| 风格配置（seo_style_conf） | scope（类目）/ default_style / char_limit | 按类目可配 |
+| 对象 | 字段 | 类型 | 必填 | 校验/默认 | 说明 |
+|---|---|---|---|---|---|
+| 标题版本（seo_title） | sku / style / content / status | VARCHAR / ENUM / TEXT / ENUM | 是 | style ∈ {brief, detail}；status ∈ {candidate, active, retired}；同 sku 同时仅一条 active | 版本化 |
+| 标题版本（seo_title） | prompt_version / created_by | VARCHAR / ENUM | 是 | created_by ∈ {model, operator} | 可复现 |
+| 偏好样本（seo_edit_sample） | sku / candidate / human_edited / diff_note | — | 是 | append-only | Prompt 迭代语料；保留期 1 年 |
+| 风格配置（seo_style_conf） | scope / default_style / char_limit | VARCHAR / ENUM / INT | 是 | scope=类目 path_id；default_style ∈ {brief, detail}；char_limit ∈ [10, 125] | 按类目可配，变更留痕 |
 
 ### 6.4 异常与错误处理
 
@@ -119,20 +121,23 @@ AI 功能位置：候选列即生成结果；行内"采纳/编辑/重生成"三�
 
 ## 9 验收用例（Acceptance Cases）
 
-| 用例 | Given | When | Then |
-|---|---|---|---|
-| AC-1 简洁风 | 商品属性齐（品牌/型号/规格） | 生成 | 候选含三要素、≤字符上限 |
-| AC-2 幻觉拦截 | 属性表无"24钉/次" | 生成含该词 | 自检拦截重生成；2 轮不过转人工 |
-| AC-3 版本回滚 | 已生效标题 | 切回上一版 | 生效与索引同步回滚 |
-| AC-4 修改回流 | 人工改写候选 | 保存 | 修改生效；样本入库（candidate vs human） |
-| AC-5 属性缺失 | 核心属性空 | 批量生成 | 跳过并进待补齐清单，不产出错误标题 |
-| AC-E1 服务超时 | 模型超时 | 批量 | 该条进失败清单，任务继续 |
-| AC-P1 类目配置 | 无角色改默认风格 | 拒绝 | 留痕 |
+| 用例 | 覆盖 FR | Given | When | Then |
+|---|---|---|---|---|
+| AC-1 简洁风 | FR-1、FR-2 | 商品属性齐（品牌/型号/规格） | 生成 | 候选含三要素、≤字符上限 |
+| AC-2 幻觉拦截 | FR-3 | 属性表无"24钉/次" | 生成含该词 | 自检拦截重生成；2 轮不过转人工 |
+| AC-3 版本回滚 | FR-5、FR-7 | 已生效标题 | 切回上一版 | 生效与索引同步回滚 |
+| AC-4 修改回流 | FR-5、FR-6 | 人工改写候选 | 保存 | 修改生效；样本入库（candidate vs human） |
+| AC-5 属性缺失 | FR-1 | 核心属性空 | 批量生成 | 跳过并进待补齐清单，不产出错误标题 |
+| AC-6 批量进度 | FR-4 | 按类目圈选 1 万条 | 批量生成 | 进度可见；失败清单可重跑 |
+| AC-E1 服务超时 | FR-4 | 模型超时 | 批量 | 该条进失败清单，任务继续 |
+| AC-P1 类目配置 | FR-2 | 无角色改默认风格 | 尝试修改 | 拒绝；留痕 |
 
 ## 10 开放问题（Open Questions）
 
-- Q1：各类目字符上限与核心属性排序模板——商品+采购业务对接人共定（11-30 前）
-- Q2：生效是否需要采购侧联审（标题影响检索面）——评审确认
+| Q ID | 未决问题 | 影响 FR/AC | 选项与推荐项 | 决策 Owner | 截止日期 | 当前状态 | 未决时默认行为 |
+|---|---|---|---|---|---|---|---|
+| Q1 | 各类目字符上限与核心属性排序模板 | FR-2、AC-1 | 依赖类目模板资产 | 商品+采购业务对接人共定 | 2026-11-30 | 待定 | 全类目统一 40/60 字符（简洁/详细） |
+| Q2 | 生效是否需要采购侧联审（标题影响检索面） | FR-5、AC-3 | 推荐：抽检制不逐条联审 | 评审确认 | 2026-12-05 | 待裁决 | 批量抽检 ≥5% 后一键生效 |
 
 ## 11 相关文档（Appendix）
 
@@ -144,3 +149,4 @@ AI 功能位置：候选列即生成结果；行内"采纳/编辑/重生成"三�
 | 日期 | 版本 | 变更 | 说明 |
 |---|---|---|---|
 | 2026-09-26 | v0.3 | 完整版立卡 | 补齐 UAT 段文档缺口 |
+| 2026-10-09 | v1.0 | Frozen（规范化修复） | §6.3 升全字段契约；§9 加「覆盖 FR」列并补 AC-6（FR-4 批量进度原无独立覆盖）；§10 表格化 |

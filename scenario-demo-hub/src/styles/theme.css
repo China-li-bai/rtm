@@ -364,6 +364,9 @@ svg.arrows { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .m-row li::before { content: "▪"; color: var(--c-gray-2); position: absolute; left: 0; }
 .m-sec.sol .m-lab { color: var(--c-accent-dark); background: var(--c-accent-bg); }
 .m-sec.sol li::before { color: var(--c-accent); }
+.m-sec.context { border: 1.5px solid var(--c-blue-border); background: var(--c-blue-bg); }
+.m-sec.context h4 { color: var(--c-blue); }
+.m-sec.context .m-lab { color: var(--c-blue); background: #fff; }
 
 /* ---------- 场景中心首页 ---------- */
 .hub { max-width: 1360px; }

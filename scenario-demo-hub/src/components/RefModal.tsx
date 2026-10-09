@@ -1,16 +1,19 @@
 import { useEffect } from "react";
 import type { RefInfo } from "../lib/refs";
-import type { ScenarioConfig } from "../schema/scenario";
+import type { FlowNode, ScenarioConfig } from "../schema/scenario";
 
 interface Props {
   refId: string;
   cfg: ScenarioConfig;
   refs: Map<string, RefInfo>;
+  contextNode?: FlowNode | null;
   onClose: () => void;
 }
 
-/** 场景/约束完整内容弹窗（红线6：完整内容进弹窗） */
-export function RefModal({ refId, cfg, refs, onClose }: Props) {
+/** 场景/约束完整内容弹窗（红线6：完整内容进弹窗）。
+ *  场景/约束定义全站唯一；从节点详情打开时带 contextNode，
+ *  弹窗顶部追加「当前流程节点如何落实」=该节点 solves[].how，同一场景从不同节点打开呈现不同承接方式。 */
+export function RefModal({ refId, cfg, refs, contextNode, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -23,6 +26,7 @@ export function RefModal({ refId, cfg, refs, onClose }: Props) {
   if (!info) return null;
   const scenario = cfg.scenarios.find((s) => s.id === refId);
   const constraint = cfg.constraints.find((c) => c.id === refId);
+  const nodeSolve = contextNode?.solves.find((item) => item.ref === refId);
 
   return (
     <div className="mask" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -32,6 +36,23 @@ export function RefModal({ refId, cfg, refs, onClose }: Props) {
           <span className={`chip-s ${info.kind === "S" ? "s" : "c"}`}>{info.chip}</span>
           <span className="m-title">{info.full}</span>
         </div>
+
+        {contextNode && nodeSolve && (
+          <div className="m-sec context">
+            <h4>■ 当前流程节点如何落实</h4>
+            <div className="m-row">
+              <span className="m-lab">流程节点</span>
+              <span className="t">
+                {contextNode.no ? `${contextNode.no} ` : ""}
+                {contextNode.panelTitle ?? contextNode.title}
+              </span>
+            </div>
+            <div className="m-row">
+              <span className="m-lab">本节点做法</span>
+              <span className="t">{nodeSolve.how}</span>
+            </div>
+          </div>
+        )}
 
         {scenario && (
           <>

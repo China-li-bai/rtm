@@ -589,3 +589,76 @@
 - **视觉截图无法内联查看**：emitImage 产物经 CDN 中转，Read/analyze_image 均拿不到可视图（CDN 链接解析失败）；按「AI 视觉结论必须 DOM 实测交叉验证」的既有纪律，全部验证走 DOM 几何实测完成，截图仅留档 artifacts。
 - **cua.scroll 30s 超时**：滚动一律改 `evaluate` + `window.scrollTo`。
 - `validateLayoutGeometry` 需要 `Issue` 类型，修复稿未列该导入，补进 rules 导入行。
+
+---
+
+## 任务 V｜AI 猜你喜欢内容修复 + 弹窗节点上下文（2026-10-09 15:25 CST 开始，进行中）
+
+**任务描述**：按 `review/rtm-ai-recommend-review-and-complete-fix.md`（配套 `review/repair-ai-recommend.ts`）落地两部分：① 执行内容修复脚本——ai-recommend.json 场景替换为 S1单位常购/S2相似商品/S3关联品类、约束扩为 C1~C4、逐节点收敛 solves[].how、清理无证据强承诺文案；② UI 修复三件套——DetailPanel 入口文案改口径、ScenarioPage 维护 modalNodeContext、RefModal 弹窗在保留唯一场景定义的同时展示「当前流程节点如何落实」。
+
+**进度**：100%（2026-10-09 15:45 CST 完成）
+
+### 交付
+1. **内容修复**（`scripts/repair-ai-recommend.ts`，由 `review/repair-ai-recommend.ts` 落入）：`scenarios/ai-recommend.json` 场景替换为 S1单位常购难发现/S2详情页缺少相似商品/S3关联品类与零结果缺少兜底（对齐 AIP-029/030/031），约束扩为 C1采购资格先于排序/C2理由有据可溯/C3单位数据隔离与公平/C4成本时延降级可控；26 节点逐个收敛 solves[].how；节点标题/副标题/ai/process/highlights 全量换新并清除"场景套餐/跨单位同侪/分钟级/默认个人画像"类无证据承诺；bizContext/dataSupport/compare/metricNote 更新。写入前自校验（引用闭环/落点覆盖/effects-consequences 等长/card≤120）全过，备份 `.before-content-fix.bak` 生成。
+2. **UI 修复三件套**（`review/rtm-ai-recommend-review-and-complete-fix.md` 第五节）：
+   - `DetailPanel.tsx`：入口文案改"■ 本节点关联的业务场景 / 规则约束"、"查看完整场景 ↗"、"→ 本节点如何承接："——区分共享场景定义与节点级承接两个层次；
+   - `ScenarioPage.tsx`：新增 `modalNodeContext` state + 统一 `openRef(refId, contextNode)` 入口，痛点/约束卡片传 null、节点详情传 selected，RefModal onClose 双清；
+   - `RefModal.tsx`：新增可选 `contextNode` prop，头部之后渲染 `.m-sec.context`（"■ 当前流程节点如何落实"= 流程节点名 + 该节点 solves[].how）；theme.css 补 context 蓝色系样式（blue-border/blue-bg，与 prob 灰、sol 橙三分）。
+   - 场景定义仍全站唯一（refs.ts 单一事实源不动），**未**复制 node1S1 类重复对象。
+
+### 验证（构建期 + 浏览器 DOM 实测）
+- 构建期：`layout` ✓ 13 份（仅 ai-recommend 布局回写，画布 919→1020，主链 e1→e5 x=351/558/765/972/1179 严格递增，最右缘 1348=CONTENT_RIGHT，任务U 宽度档位 24 节点全保留）；`validate` ✓ 0 error（5 条 warn 为 cat-governance/contract-blueprint 存量，非本次引入）；`tsc --noEmit` ✓；`build` ✓ 751.77KB/gzip 243.04KB。
+- DOM 实测（http.server + hash 路由 + evaluate）：①痛点卡片打开弹窗无 context 区块，且带节点上下文关闭后再从卡片打开不残留（openRef(null) 重置生效）；②e1 抽屉三处新文案到位，点 S2 徽章弹窗 context 区块位于头部后第一位，显示"02 多路召回（核心一）"+召回侧 how；③同一 S2 从 e4 打开：标题/故事完全相同（唯一定义），how 换为排序侧"优先同款关系和关键属性匹配"——**同一场景不同节点不同承接**核心验收项通过；④C1 约束弹窗 reality/decision/land 渲染正常，无 context。
+- 强承诺词扫描：不可篡改×4/零成本×1/竞价×6/跨单位×4 全部为否定式护栏表述（"不宣称/不做/禁止/才可声称"），无正向强承诺。
+- e3(硬约束过滤, x=765) 数组序与 x 均先于 e4(按触点排序, x=972)；主链边 e2→e3→e4→e5。
+
+### 关键问题与解决
+- 脚本覆盖式写入不动 `w/x/y/h/route`，任务U 宽度成果零回退（diff 复核 24 节点宽度档位逐一吻合）。
+- repair 脚本同时保留 panelTitle（如"02 多路召回（核心一）"）——画布标题用 title、抽屉/弹窗 context 用 panelTitle，两层标题语义本就并存，非冲突。
+- review/ 三份文档与 scripts/repair-ai-recommend.ts、.bak 备份暂为未跟踪文件，是否入库由用户决定。
+
+---
+
+## 任务 W｜AI 猜你喜欢场景文案人味化（2026-10-09 16:00 CST 开始，进行中）
+
+**任务描述**：按 `review/ai-recommend-humanized-copy-guide.md`（配套 `review/repair-ai-recommend-humanized.ts`）把 S1/S2/S3 场景文案改成有画面感的采购实录——先出现具体动作（月底补货/点开安全帽/清单差一件）、用可观察阻碍替代抽象词、解决方案回应原动作、保留真实边界（冷启动/证据不足隐藏/理由须有据）。指南明确用完整脚本（含结构修复+solves+人味文案），无需串行两份。与上一版脚本 diff 复核：**仅三个场景的 name/card/story/solution 变更，约束 C1~C4、solves、nodeCopy 全部逐字相同**——证据层零改动，只动场景层。
+
+**进度**：100%（2026-10-09 15:58 CST 完成）
+
+### 交付
+1. **人味化脚本执行**（`scripts/repair-ai-recommend-humanized.ts`，源自 `review/repair-ai-recommend-humanized.ts`）：S1→"常买的东西，还得重新找"（月底工作台补货/想不起 SKU 在哪张订单）、S2→"想比个相近款，还得来回翻页"（安全帽详情页/退回搜索换关键词）、S3→"清单差一件，系统没给下一步"（购物车差护目镜/零结果页无下一步）。每条 story 先出现具体动作，consequences 用可观察阻碍替代抽象词，effects 回应原动作且保留边界（冷启动如实标注/证据不足隐藏/理由须有据）。
+2. **证据层零改动**：新旧脚本 diff 复核——约束 C1~C4、26 节点 solves/nodeCopy、bizContext/compare/metricNote 逐字相同；执行后 JSON 增量 36 处全部落在 scenarios[0..2] 内部（name/card/story/solution），flow 几何逐字节一致，宽度档位无回退。
+3. **备份双留存**：`ai-recommend.json.before-first-content-fix.bak`（人味化两轮前的原始内容）+ `ai-recommend.json.before-content-fix.bak`（人味化前、任务V 版）。
+
+### 验证
+- 构建期：layout ✓ 13 份、validate ✓ 0 error（5 条存量 warn 不变）、tsc ✓、build ✓ 752.35KB/gzip 243.54KB。
+- DOM 实测：三个场景弹窗标题/who/stuck/effects 全部为人味新版；十秒四问逐条可答（页面+任务/卡住动作/省掉的步骤/数据边界）；从节点 e1 打开场景一徽章——弹窗顶部人味故事 + context 区块机制落点（单位常购召回+冷启动兜底）同屏，画面感与证据并存；卡片入口无 context 不残留（沿任务V 结论，openRef 逻辑未动）。
+- tag/kw 未变（单位常购/复购、相似商品/比选、关联品类/关联采购），徽章与 kw 角标零回归。
+
+### 关键问题与解决
+- 新版脚本会覆盖同名备份 `.before-content-fix.bak`——执行前先把旧备份改名为 `.before-first-content-fix.bak`，两轮内容快照均留存。
+- 节点文案未变 → layout 重跑后 flow 逐字节一致，无几何漂移、无其他 12 份配置波及。
+
+---
+
+## 任务 X｜双原则推广：overall-flow / ai-service / service-faq 场景人味化（2026-10-09 16:10 CST 开始，进行中）
+
+**任务描述**：把任务W确立的"场景有人味、方案有证据"双原则推广到用户点名三处——①overall-flow（商城 AI 业务全景·从 0 到 1）场景偏汇报腔，who/stuck 缺具体动作与可观察阻碍；②ai-recommend（AI 搜索中台- AI猜你喜欢）任务W已完成，本次仅核验不重做；③AI 客服中台 2 个场景页：ai-service（who/stuck 泛化但 effects 带〔实测〕证据标记须保留）+ service-faq（人味已强，仅 who 行弱于 card 做轻修）。改写只动场景层 name/card/story.who/story.stuck 及回应场景的 solution，consequences/effects（证据层与实测标记）不动；tag/kw/ID/约束/solves/nodeCopy 全部不动。
+
+**进度**：100%（2026-10-09 16:55 CST 完成）
+
+### 交付（三个脚本，均含 .before-humanize.bak 备份 + 写入前自校验）
+1. **overall-flow**（`repair-overall-flow-humanized.ts`，12 处变更=name/card/who/stuck×3）：S1"商品上了架，采购筛不到"（推品写法五花八门/按口径筛三轮全空/群里来回对急件）、S2"换个写法，就搜不到"（DN65 对不上直径65/搜索框只能再试关键词）、S3"晚上问的事，白天才能答"（晚十点巡库发现发错货/白天排队+口径不一）。
+2. **ai-service**（`repair-ai-service-humanized.ts`，12 处变更同上）：S1"排队的都是老问题"（周一上午集中问发票进度/上周问过这周还问）、S2"同一个问题，两个答案"（月底对账问开票/上午能开专票下午不能）、S3"晚上的急事，等不到天亮"（夜班巡库发现发错货/留言容易沉底）。
+3. **service-faq**（`repair-service-faq-humanized.ts`，3 处变更仅 who）：该页 name/card/stuck 已达标不动，只把 who 从泛化（"采购就同一政策类问题多次咨询"）补上场景锚点（"采购上午问了一次质保政策，下午不放心，又确认了一遍"等）。
+4. **ai-recommend（用户第②项）核验不重做**：任务W成果仍在（三个场景名/文案均为人味版），徽章-弹窗-承接链完好。
+- 脚本内置断言：consequences/solution 与改前逐字相等（证据层结构性不动）、id/tag/kw 稳定、card≤120；ai-service effects 的〔实测〕〔示意〕（设计口径）标记原样保留。
+
+### 验证
+- 增量核对：三文件顶层差异键均只有 scenarios；overall-flow/ai-service 各 12 处、service-faq 3 处，全部落在预期字段；flow（节点/几何/route）与人味化前逐字节一致。
+- 构建期：layout ✓ 13 份、validate ✓ 0 error（5 条存量 warn 不变）、tsc ✓、build ✓ 752.99KB/gzip 243.88KB。
+- DOM 实测（http.server + hash 路由）：三页九个场景弹窗全部渲染新文案——人味 who/stuck 在上、证据 effects 在下；ai-service S2"6 秒生效〔实测〕"等标记在位；service-faq 卡片与 stuck 零回归；ai-service 节点"02 意图识别与分流"→场景一徽章→弹窗人味标题+「当前流程节点如何落实」机制落点同屏；ai-recommend 三场景名仍为任务W人味版。
+
+### 关键问题与解决
+- ai-service/overall-flow 的 effects 含强表述（"秒级响应""排队大幅缩短"）与实测标记——按"方案有证据"原则一律不动，只换场景层；未引入无标记数字。
+- service-faq 已高度人味，评估后仅做 who 三行轻修，避免过度改写引入回归。
