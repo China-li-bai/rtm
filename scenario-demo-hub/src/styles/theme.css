@@ -105,15 +105,72 @@ h2 small { font-weight: 400; font-size: 12px; color: var(--c-gray); margin-left:
 .biz-ctx-body { font-size: 12.6px; line-height: 1.6; color: #2c4a63; }
 .biz-ctx-body b { color: #2b6cb8; }
 
-.lane { position: absolute; left: 12px; width: calc(var(--page-w) - 24px); background: var(--c-lane); border-radius: 8px; }
-.lane.tone-biz { background: #eef1f5; }
-.lane.tone-ai { background: #fdf5f0; }
-.lane.tone-base { background: #f2f3f5; }
-.lane.tone-data { background: #eaf7ef; }
-.lane.tone-mid { background: #f3effb; }
-.lane-label { position: absolute; left: 20px; transform: translateY(-50%); padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--c-line); box-shadow: 0 1px 4px rgba(39,49,61,0.08); font-size: 12px; font-weight: 800; text-align: center; color: var(--c-ink); white-space: pre-line; z-index: 3; max-width: 100px; }
-/* 泳道注释：整条标签带宽度（=FLOW.LABEL_BAND 118），药丸下方独立文本框 */
-.lane-note-box { position: absolute; left: 12px; width: 118px; font-size: 10px; font-weight: 600; color: var(--c-gray); line-height: 1.38; text-align: center; z-index: 3; }
+.lane {
+  position: absolute;
+  left: 12px;
+  width: calc(var(--page-w) - 24px);
+  background: var(--c-lane);
+  border: 1px solid var(--c-line);
+  border-radius: 8px;
+}
+.lane.tone-biz { background: #f0f6ff; border-color: #d6e5fa; }
+.lane.tone-ai { background: #f5f1ff; border-color: #e2d7ff; }
+.lane.tone-base { background: #f5f6f8; border-color: #e0e4e9; }
+.lane.tone-data { background: #effaf4; border-color: #cfefdc; }
+.lane.tone-mid { background: #f5f1ff; border-color: #e2d7ff; }
+
+.lane-rail {
+  position: absolute;
+  left: 12px;
+  width: 118px; /* 必须与 FLOW.LABEL_BAND 一致 */
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--c-line);
+  border-right-color: #c9d5e5;
+  border-radius: 8px 0 0 8px;
+  z-index: 3;
+  pointer-events: none;
+}
+.lane-rail.tone-biz { background: #e4efff; border-color: #c5dafb; }
+.lane-rail.tone-ai { background: #eae3ff; border-color: #d2c4ff; }
+.lane-rail.tone-base { background: #e9edf2; border-color: #d5dce5; }
+.lane-rail.tone-data { background: #ddf6e8; border-color: #b8e8cd; }
+.lane-rail.tone-mid { background: #eae3ff; border-color: #d2c4ff; }
+
+.lane-rail-copy {
+  width: 78px;
+  flex: 0 0 78px;
+}
+.lane-label {
+  position: static;
+  width: 78px;
+  max-width: 78px;
+  transform: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--c-ink);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 800;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.lane-note-box {
+  position: static;
+  width: 78px;
+  margin-top: 6px;
+  color: var(--c-gray);
+  font-size: 10px;
+  line-height: 1.38;
+  font-weight: 600;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
 .node { position: absolute; background: #fff; border: 1px solid var(--c-line-2); border-radius: 8px; padding: 10px 12px 8px; cursor: pointer; transition: 0.15s; z-index: 3; box-shadow: 0 1px 4px rgba(39,49,61,0.07); }
 .node:hover { border-color: var(--c-accent); box-shadow: 0 4px 14px rgba(255, 75, 22, 0.25); transform: translateY(-1px); }
 .node.sel { border: 2px solid var(--c-accent); background: var(--c-accent-soft); box-shadow: 0 4px 16px rgba(255, 75, 22, 0.3); }

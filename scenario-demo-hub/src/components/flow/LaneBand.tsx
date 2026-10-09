@@ -7,22 +7,27 @@ interface Props {
 }
 
 /**
- * 泳道背景带 + 层名药丸 + 注释框。
- * 泳道名居中于药丸（识别锚点），note 以整条标签带宽度独占药丸下方，
- * 不再挤在药丸内——药丸保持紧凑，注释拿到 ~118px 全带宽更易读。
+ * 横向泳道 + 左侧固定标题栏。
+ * 标题栏文字限制在标签带左侧 78px，给 x≈100..120 的反馈回路走线保留通道；
+ * 节点区起点仍由 NODE_LEFT = LANE_LEFT + LABEL_BAND 统一控制。
  */
 export function LaneBand({ lane }: Props) {
-  const mid = lane.top + lane.height / 2;
+  const tone = lane.tone ? ` tone-${lane.tone}` : "";
+  const laneStyle = { top: lane.top, height: lane.height };
+
   return (
     <>
+      <div className={`lane${tone}`} style={laneStyle} aria-hidden="true" />
       <div
-        className={`lane${lane.tone ? ` tone-${lane.tone}` : ""}`}
-        style={{ top: lane.top, height: lane.height }}
-      />
-      <div className="lane-label" style={{ top: mid }}>{lane.label}</div>
-      {lane.note && (
-        <div className="lane-note-box" style={{ top: mid + 16 }}>{lane.note}</div>
-      )}
+        className={`lane-rail${tone}`}
+        style={laneStyle}
+        aria-label={lane.label}
+      >
+        <div className="lane-rail-copy">
+          <div className="lane-label">{lane.label}</div>
+          {lane.note && <div className="lane-note-box">{lane.note}</div>}
+        </div>
+      </div>
     </>
   );
 }

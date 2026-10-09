@@ -562,3 +562,30 @@
 
 ### 未擅自处理（需用户确认）
 `src/lib/scenarios.ts` 存在一条**非本次改动**的过滤 `item.id !== "contract-blueprint"`（内含 `console.log({item})`），导致合同蓝图页运行时提示「场景不存在」、首页少一组卡片。因属用户有意的临时屏蔽，**未擅自删除**；也因此无法对 contract-blueprint 做运行时回归——改以「zod 校验 8 份全过 + 共用同一渲染组件 + indexTitle 缺省兼容」三重保证向后兼容。
+
+---
+
+## 任务 U｜AI 猜你喜欢泳道图布局修复（修复稿六项全落地）（2026-10-09 14:00–14:30 CST，100%）
+
+**任务描述**：按仓外修复稿 `rtm/rtm-ai-recommend-swimlane-fix.md` 解决三件套——节点尺寸与布局坐标一致性、跨泳道连接方向选择、布局几何校验不足。
+
+### 交付（六项，全部按修复稿原文落地）
+1. `src/flow/tokens.ts`：GRID_GAP 40→30（仍 > 2×SHAPE_BUFFER=20；同时是链式列距下限，允许节点加宽后留档画布内）。
+2. `src/components/flow/LaneBand.tsx` 完整替换：横向泳道 + 左侧固定标题栏（lane-rail），文字限 78px 给 x≈100..120 反馈回路走线留通道；lane 背景 aria-hidden、rail 承载 aria-label。
+3. `src/styles/theme.css` 泳道样式组替换：`.lane` 加边框、新增 `.lane-rail`（118px=LABEL_BAND，五 tone 色）与 `.lane-rail-copy`；`.lane-label`/`.lane-note-box` 改 static 流式（左对齐 78px，药丸样式拆除）。tone 色全站换新（biz/ai/base/data/mid）。
+4. `scripts/auto-layout.ts` choosePins 重写：按节点中心 dx/dy 几何选默认端口（同泳道 |dy|>|dx| 才走上下；跨泳道 |dy|≥|dx|×0.9 偏好上下、横向明显占优允许侧连），`fromSide`/`toSide` 显式声明只覆盖对应一端。旧版跨泳道一律上下端口的折返问题消除（fb→e1、st→e4 实测改走左右）。
+5. `scenarios/ai-recommend.json` 24 节点加宽（r12=180 / e1-e5·r3·fb·st=166 / d1-d4=150 / g1-g5=130 / i1-i6=115），只改 w 不碰 x/y/h/route/labelAt——git diff 复核恰好 24 行 w 变更，零格式噪声。
+6. `scripts/validate.ts` 新增 `validateLayoutGeometry`：节点在画布与泳道内、节点两两不重叠、route 端点落在节点边界、逐段正交且不穿节点（error 级）+ 标签与节点可能重叠（warn 级，防字体度量误拦）；主循环经 `scenarioConfigSchema.safeParse` 成功后挂载。
+
+### 验证（构建期 + DOM 实测双层）
+- `npm run layout`：13 份 autoLayout 全部回写，ai-recommend 画布 1360×919；主链 e1→e5 x=351/558/765/972/1179 严格递增，列间距 41px 与修复稿预测 `floor((1218-1010)/5)` 完全一致；最右缘 1348=CONTENT_RIGHT。
+- `npm run validate`：13 份 0 error；5 条 warn 全为标签可能重叠（cat-governance 1 + contract-blueprint 4）——新校验按设计以 warn 暴露的存量现象，非本次引入的破坏。ai-recommend 自身零警告。
+- `tsc --noEmit` ✓；`npm run build` ✓（dist/index.html 743.42KB / gzip 240.11KB，由构建产物更新未手编）。
+- 浏览器 DOM 实测（本地起 http.server + hash 路由）：5 泳道 rail 全部 118px、与泳道带 top/height 对齐、label/note 零截断；26 节点 .tt/.st 零横/纵溢出；z 序 arrows(2)<node(3)=rail(3)<lab(4)；SVG path 与构建期 route 逐条吻合（21 path=19 边+2 marker）。
+- 全站回归：遍历其余 10 个链式场景页，rail 零截断/零错位、节点文字零溢出——LaneBand/theme.css 共享改动无回归。
+
+### 关键问题与解决
+- **IAB 画布初始 20% 缩放**：进入场景页画布被 fitAll 成 0.2（此前记录未见），DOM 验证前需点「重置视图」回 fitWidth≈98%；工具栏按钮被顶栏遮挡 click 超时，改 `evaluate` 页面内直接 `target.click()` 绕过（呼应既有「自动化点击防顶栏遮挡」坑）。
+- **视觉截图无法内联查看**：emitImage 产物经 CDN 中转，Read/analyze_image 均拿不到可视图（CDN 链接解析失败）；按「AI 视觉结论必须 DOM 实测交叉验证」的既有纪律，全部验证走 DOM 几何实测完成，截图仅留档 artifacts。
+- **cua.scroll 30s 超时**：滚动一律改 `evaluate` + `window.scrollTo`。
+- `validateLayoutGeometry` 需要 `Issue` 类型，修复稿未列该导入，补进 rules 导入行。

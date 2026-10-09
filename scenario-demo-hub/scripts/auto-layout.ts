@@ -701,33 +701,48 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     );
   }
 
-  /**
-   * 按层关系与几何选择源/目标 pin class。
-   * @param e 边配置
-   * @returns 源、目标引脚 class
-   */
+  const PIN_BY_SIDE: Record<string, number> = {
+    top: PIN_TOP,
+    bottom: PIN_BOTTOM,
+    left: PIN_LEFT,
+    right: PIN_RIGHT,
+  };
+
   const choosePins = (e: RawEdge): { srcPin: number; tgtPin: number } => {
     const s = nodeById.get(e.from);
     const t = nodeById.get(e.to);
     if (!s || !t) throw new Error(`边 ${e.from}→${e.to} 引用了不存在的节点`);
-    const sLane = s.laneIndex ?? 0;
-    const tLane = t.laneIndex ?? 0;
-    if (tLane !== sLane) {
-      // 跨层：层号增大=向下（底出顶入），层号减小=向上（顶出底入）
-      return tLane > sLane
+
+    const scx = (s.x ?? 0) + s.w / 2;
+    const scy = (s.y ?? 0) + nodeH(s) / 2;
+    const tcx = (t.x ?? 0) + t.w / 2;
+    const tcy = (t.y ?? 0) + nodeH(t) / 2;
+    const dx = tcx - scx;
+    const dy = tcy - scy;
+    const sameLane = (s.laneIndex ?? 0) === (t.laneIndex ?? 0);
+
+    // 同泳道优先按较大的几何位移选择方向；跨泳道仍偏好上下连接，
+    // 但当横向位移明显大于纵向位移时允许侧边连接，避免不必要的长折返。
+    const verticalPreferred = sameLane
+      ? Math.abs(dy) > Math.abs(dx)
+      : Math.abs(dy) >= Math.abs(dx) * 0.9;
+
+    let automatic: { srcPin: number; tgtPin: number };
+    if (verticalPreferred) {
+      automatic = dy >= 0
         ? { srcPin: PIN_BOTTOM, tgtPin: PIN_TOP }
         : { srcPin: PIN_TOP, tgtPin: PIN_BOTTOM };
-    }
-    // 同层：默认按列走左右引脚；同列（x 差不足半宽）才走上下
-    const dx = (t.x ?? 0) - (s.x ?? 0);
-    if (Math.abs(dx) >= s.w * 0.5) {
-      return dx > 0
+    } else {
+      automatic = dx >= 0
         ? { srcPin: PIN_RIGHT, tgtPin: PIN_LEFT }
         : { srcPin: PIN_LEFT, tgtPin: PIN_RIGHT };
     }
-    return (t.y ?? 0) > (s.y ?? 0)
-      ? { srcPin: PIN_BOTTOM, tgtPin: PIN_TOP }
-      : { srcPin: PIN_TOP, tgtPin: PIN_BOTTOM };
+
+    // 显式侧边只覆盖对应一端；另一端仍可使用自动推断。
+    return {
+      srcPin: e.fromSide ? (PIN_BY_SIDE[e.fromSide] ?? automatic.srcPin) : automatic.srcPin,
+      tgtPin: e.toSide ? (PIN_BY_SIDE[e.toSide] ?? automatic.tgtPin) : automatic.tgtPin,
+    };
   };
 
   // 保留每个 ConnRef 实例与 flow.edges 对位（库的连接器列表字段/内部顺序均不应假设）

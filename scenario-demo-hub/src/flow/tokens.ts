@@ -20,9 +20,8 @@ export const FLOW = {
   LABEL_BAND: 118,
   CANVAS_RIGHT_PAD: 12,
 
-  /** ELK 网格重排的行列间距（须 > 2×SHAPE_BUFFER=20，保证布线走廊通畅）；
-   *  链式布局列距也以它为下限（chainColumns 红线校验） */
-  GRID_GAP: 40,
+  /** ELK 网格重排的行列间距；必须 > 2 × SHAPE_BUFFER(10) */
+  GRID_GAP: 30,
 
   /** ELK 分支泳道内边距/间距 */
   LANE_TOP_PAD: 28,
