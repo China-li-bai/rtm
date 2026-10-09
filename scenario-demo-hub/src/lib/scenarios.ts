@@ -16,11 +16,7 @@ export const scenarios: ScenarioConfig[] = Object.entries(modules)
       throw new Error(`场景配置解析失败 ${path}: ${parsed.error.message}`);
     }
     return parsed.data;
-  }).filter(item=>{
-    console.log({item});
-    
-    return item.id !== "contract-blueprint";
-  })
+  }).filter((item) => item.id !== "contract-blueprint")
    .sort((a, b) => a.id.localeCompare(b.id));
 
 export function getScenario(id: string): ScenarioConfig | undefined {

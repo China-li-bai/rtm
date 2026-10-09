@@ -109,6 +109,8 @@ h2 small { font-weight: 400; font-size: 12px; color: var(--c-gray); margin-left:
 .lane.tone-biz { background: #eef1f5; }
 .lane.tone-ai { background: #fdf5f0; }
 .lane.tone-base { background: #f2f3f5; }
+.lane.tone-data { background: #eaf7ef; }
+.lane.tone-mid { background: #f3effb; }
 .lane-label { position: absolute; left: 20px; transform: translateY(-50%); padding: 4px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--c-line); box-shadow: 0 1px 4px rgba(39,49,61,0.08); font-size: 12px; font-weight: 800; text-align: center; color: var(--c-ink); white-space: pre-line; z-index: 3; max-width: 100px; }
 /* 泳道注释：整条标签带宽度（=FLOW.LABEL_BAND 118），药丸下方独立文本框 */
 .lane-note-box { position: absolute; left: 12px; width: 118px; font-size: 10px; font-weight: 600; color: var(--c-gray); line-height: 1.38; text-align: center; z-index: 3; }

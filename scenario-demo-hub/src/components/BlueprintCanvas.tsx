@@ -42,7 +42,7 @@ const EDGE_STROKE: Record<FlowEdge["style"], { color: string; width: number; das
 
 /**
  * 合同蓝图画布：「总索引 + 分层下钻」双态。
- * - L1 总索引：顶部主链七步 + 六泳道行（节点 pill 横排，主链序号徽标），零飞线
+ * - L1 总索引：顶部主链七步（无 indexChain 时降为索引条标题）+ 六泳道行（节点 pill 横排，主链序号徽标），零飞线
  * - L2 泳道下钻：单泳道内部流程（同层正交连线）+ 右侧跨端协同锚点（按对端泳道分组）
  * - L3 节点详情：沿用页面右抽屉（onSelect 触发）
  */
@@ -98,7 +98,7 @@ export function BlueprintCanvas({ flow, selectedId, onSelect }: Props) {
     return (
       <div className="card flow bp">
         <div className="bp-chain">
-          <span className="bp-chain-title">合同业务闭环 · 主链</span>
+          <span className="bp-chain-title">{flow.indexTitle ?? "合同业务闭环 · 主链"}</span>
           {chain.map((n, i) => (
             <span key={n.id} className="bp-chain-item">
               {i > 0 && <span className="bp-chev">→</span>}

@@ -63,7 +63,7 @@ const laneSchema = z.object({
   /** 泳道角色注（入口/出口/链路角色），渲染在泳道标签下方小字 */
   note: z.string().optional(),
   /** 泳道底色分区：biz=业务两端（灰蓝）/ ai=AI 中台（暖）/ base=底座（浅灰） */
-  tone: z.enum(["biz", "ai", "base"]).optional(),
+  tone: z.enum(["biz", "ai", "base", "data", "mid"]).optional(),
   top: z.number(),
   height: z.number().positive(),
 });
@@ -193,6 +193,8 @@ const flowSchema = z.object({
   drill: z.boolean().optional(),
   /** L1 主链阶段顺序（节点 id 数组，7 步以内）；仅 drill 模式使用 */
   indexChain: z.array(z.string()).optional(),
+  /** L1 顶部索引条标题；仅 drill 模式使用，缺省保持合同蓝图口径 */
+  indexTitle: z.string().optional(),
   /**
    * 链式布局主链（节点 id 数组，按业务推进顺序）：声明后构建期按
    * 「列=链位、跨泳道保持同列」的确定性规则布局——业务主链从左到右
