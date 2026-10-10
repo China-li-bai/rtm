@@ -42,6 +42,8 @@ export function NodeBox({ n, sel, dim, onSelect, onHover }: NodeBoxProps) {
     return (
       <div className={`node diamond${sel ? " sel" : ""}${dim ? " dim" : ""}`} style={style}
         onClick={() => onSelect(n.id)} {...hoverProps}>
+        {/* 菱形本体：clip-path 按声明几何裁形（详见 theme.css .node.diamond 注释） */}
+        <span className="dm" aria-hidden="true" />
         <div className="tt" style={{ justifyContent: "center", fontSize: "12.5px" }}>{n.title}</div>
       </div>
     );
