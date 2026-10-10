@@ -1,0 +1,1502 @@
+{
+  "generatedAt": "2026-10-10T04:16:09.113Z",
+  "summary": {
+    "files": 14,
+    "totalEdges": 167,
+    "outOfCanvas": 0,
+    "dangerBand": 4,
+    "crossings": 91,
+    "routeLength": 56680,
+    "bends": 205,
+    "labelsOnOwnNode": 10,
+    "labelsOnOtherNode": 0,
+    "labelsOnOtherEdge": 34,
+    "labelOverlaps": 21,
+    "labelsOutOfCanvas": 0
+  },
+  "reports": {
+    "ai-chat-guide.json": {
+      "nodes": 16,
+      "edges": 21,
+      "canvas": {
+        "w": 1360,
+        "h": 970
+      },
+      "routePoints": 76,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [
+        {
+          "a": "g1→gx",
+          "b": "h1→u1",
+          "at": [
+            385,
+            422
+          ],
+          "styles": "main×dash"
+        },
+        {
+          "a": "gx→s1",
+          "b": "g5→h1",
+          "at": [
+            1065,
+            573
+          ],
+          "styles": "main×dash"
+        },
+        {
+          "a": "gx→s1",
+          "b": "d2→g3",
+          "at": [
+            894,
+            573
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "gx→s1",
+          "b": "d4→g5",
+          "at": [
+            1145,
+            573
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "gx→s1",
+          "b": "d5→g5",
+          "at": [
+            1053,
+            573
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "g3→s1",
+          "b": "g5→h1",
+          "at": [
+            1077,
+            476
+          ],
+          "styles": "main×dash"
+        },
+        {
+          "a": "g3→s1",
+          "b": "d5→g5",
+          "at": [
+            1077,
+            476
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "g3→s1",
+          "b": "d4→g5",
+          "at": [
+            1145,
+            573
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "g3→g1",
+          "b": "h1→u1",
+          "at": [
+            385,
+            422
+          ],
+          "styles": "dash×dash"
+        },
+        {
+          "a": "gx→h1",
+          "b": "h1→u1",
+          "at": [
+            713,
+            824
+          ],
+          "styles": "dash×dash"
+        },
+        {
+          "a": "gx→h1",
+          "b": "d6→s1",
+          "at": [
+            713,
+            573
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "s1→h1",
+          "b": "d4→g5",
+          "at": [
+            1145,
+            618
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "g5→h1",
+          "b": "d6→s1",
+          "at": [
+            1065,
+            573
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "d2→g3",
+          "b": "d6→s1",
+          "at": [
+            894,
+            573
+          ],
+          "styles": "grayDash×grayDash"
+        },
+        {
+          "a": "d4→g5",
+          "b": "d6→s1",
+          "at": [
+            1145,
+            573
+          ],
+          "styles": "grayDash×grayDash"
+        },
+        {
+          "a": "d5→g5",
+          "b": "d6→s1",
+          "at": [
+            1053,
+            573
+          ],
+          "styles": "grayDash×grayDash"
+        }
+      ],
+      "routeLength": 8945,
+      "bends": 34,
+      "labels": {
+        "total": 16,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [
+          {
+            "label": "是 · 条件齐了",
+            "edge": "gx→s1",
+            "crossedEdge": "d2→g3"
+          },
+          {
+            "label": "否 · 缺什么问什么",
+            "edge": "gx→g3",
+            "crossedEdge": "gx→s1"
+          },
+          {
+            "label": "超时 · 降级承接",
+            "edge": "g5→h1",
+            "crossedEdge": "s1→h1"
+          },
+          {
+            "label": "目录与权限边界",
+            "edge": "d3→s1",
+            "crossedEdge": "d4→g5"
+          },
+          {
+            "label": "价格库存原值回填",
+            "edge": "d4→g5",
+            "crossedEdge": "d3→s1"
+          },
+          {
+            "label": "协议标签 · 优先推荐",
+            "edge": "d5→g5",
+            "crossedEdge": "s1→h1"
+          },
+          {
+            "label": "单位偏好生效",
+            "edge": "d6→s1",
+            "crossedEdge": "gx→s1"
+          }
+        ],
+        "labelOverlaps": [
+          {
+            "a": "gx→s1",
+            "b": "d6→s1"
+          },
+          {
+            "a": "g5→h1",
+            "b": "d3→s1"
+          },
+          {
+            "a": "d3→s1",
+            "b": "d4→g5"
+          },
+          {
+            "a": "d3→s1",
+            "b": "d5→g5"
+          },
+          {
+            "a": "d4→g5",
+            "b": "d5→g5"
+          }
+        ],
+        "outOfCanvas": []
+      }
+    },
+    "ai-data-platform.json": {
+      "nodes": 9,
+      "edges": 8,
+      "canvas": {
+        "w": 1360,
+        "h": 608
+      },
+      "routePoints": 18,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [],
+      "routeLength": 931,
+      "bends": 2,
+      "labels": {
+        "total": 1,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    },
+    "ai-recommend.json": {
+      "nodes": 26,
+      "edges": 21,
+      "canvas": {
+        "w": 1360,
+        "h": 1037
+      },
+      "routePoints": 69,
+      "outOfCanvas": [],
+      "dangerBand": [
+        {
+          "edge": "e5→r3",
+          "point": [
+            1355,
+            378
+          ],
+          "side": "right"
+        },
+        {
+          "edge": "e5→r3",
+          "point": [
+            1355,
+            136
+          ],
+          "side": "right"
+        }
+      ],
+      "crossings": [
+        {
+          "a": "e2→e3",
+          "b": "r3→bar1",
+          "at": [
+            739,
+            441
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "e4→e5",
+          "b": "fb→st",
+          "at": [
+            1169,
+            441
+          ],
+          "styles": "main×dash"
+        },
+        {
+          "a": "r3→bar1",
+          "b": "fb→e1",
+          "at": [
+            739,
+            168
+          ],
+          "styles": "grayDash×dash"
+        },
+        {
+          "a": "r3→bar1",
+          "b": "g2→e3",
+          "at": [
+            739,
+            564
+          ],
+          "styles": "grayDash×grayDash"
+        },
+        {
+          "a": "r3→bar1",
+          "b": "g3→e3",
+          "at": [
+            739,
+            552
+          ],
+          "styles": "grayDash×main"
+        },
+        {
+          "a": "fb→e1",
+          "b": "d2→e1",
+          "at": [
+            544,
+            280
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "fb→st",
+          "b": "d4→fb",
+          "at": [
+            1179,
+            181
+          ],
+          "styles": "dash×main"
+        },
+        {
+          "a": "g2→e3",
+          "b": "g3→e3",
+          "at": [
+            120,
+            678
+          ],
+          "styles": "grayDash×main"
+        }
+      ],
+      "routeLength": 8023,
+      "bends": 27,
+      "labels": {
+        "total": 14,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [
+          {
+            "label": "单位画像与常购统计",
+            "edge": "d1→e1",
+            "crossedEdge": "fb→e1"
+          },
+          {
+            "label": "商品标准数据",
+            "edge": "d2→e1",
+            "crossedEdge": "fb→e1"
+          },
+          {
+            "label": "权限红线",
+            "edge": "g2→e3",
+            "crossedEdge": "g3→e3"
+          },
+          {
+            "label": "模型服务（云端按次）",
+            "edge": "i3→bar1",
+            "crossedEdge": "g4→bar1"
+          }
+        ],
+        "labelOverlaps": [
+          {
+            "a": "d1→e1",
+            "b": "d2→e1"
+          },
+          {
+            "a": "g2→e3",
+            "b": "g3→e3"
+          }
+        ],
+        "outOfCanvas": []
+      }
+    },
+    "ai-search.json": {
+      "nodes": 10,
+      "edges": 9,
+      "canvas": {
+        "w": 1360,
+        "h": 512
+      },
+      "routePoints": 21,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [],
+      "routeLength": 1379,
+      "bends": 3,
+      "labels": {
+        "total": 1,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    },
+    "ai-service.json": {
+      "nodes": 10,
+      "edges": 9,
+      "canvas": {
+        "w": 1360,
+        "h": 512
+      },
+      "routePoints": 20,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [],
+      "routeLength": 1361,
+      "bends": 2,
+      "labels": {
+        "total": 1,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    },
+    "attr-extraction.json": {
+      "nodes": 9,
+      "edges": 9,
+      "canvas": {
+        "w": 1360,
+        "h": 745
+      },
+      "routePoints": 26,
+      "outOfCanvas": [],
+      "dangerBand": [
+        {
+          "edge": "nx→n8",
+          "point": [
+            1358,
+            472
+          ],
+          "side": "right"
+        },
+        {
+          "edge": "nx→n8",
+          "point": [
+            1358,
+            699
+          ],
+          "side": "right"
+        }
+      ],
+      "crossings": [
+        {
+          "a": "n3→n4",
+          "b": "n6→n2",
+          "at": [
+            392,
+            382
+          ],
+          "styles": "main×dash"
+        },
+        {
+          "a": "nx→n8",
+          "b": "nx→n6",
+          "at": [
+            1267,
+            472
+          ],
+          "styles": "main×dash"
+        }
+      ],
+      "routeLength": 2824,
+      "bends": 8,
+      "labels": {
+        "total": 3,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [
+          {
+            "label": "否",
+            "edge": "nx→n6",
+            "crossedEdge": "nx→n8"
+          }
+        ],
+        "labelOverlaps": [
+          {
+            "a": "nx→n8",
+            "b": "nx→n6"
+          }
+        ],
+        "outOfCanvas": []
+      }
+    },
+    "capability-map.json": {
+      "nodes": 39,
+      "edges": 0,
+      "canvas": {
+        "w": 1360,
+        "h": 1712
+      },
+      "routePoints": 0,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [],
+      "routeLength": 0,
+      "bends": 0,
+      "labels": {
+        "total": 0,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    },
+    "cat-governance.json": {
+      "nodes": 8,
+      "edges": 8,
+      "canvas": {
+        "w": 1360,
+        "h": 731
+      },
+      "routePoints": 24,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [],
+      "routeLength": 2113,
+      "bends": 8,
+      "labels": {
+        "total": 3,
+        "onOwnNode": [
+          {
+            "label": "标尺校准全量水位",
+            "edge": "g2→g3",
+            "node": "g2"
+          },
+          {
+            "label": "标尺校准全量水位",
+            "edge": "g2→g3",
+            "node": "g3"
+          }
+        ],
+        "onOtherNode": [],
+        "onOtherEdge": [
+          {
+            "label": "标尺校准全量水位",
+            "edge": "g2→g3",
+            "crossedEdge": "g2→g4"
+          }
+        ],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    },
+    "contract-blueprint.json": {
+      "nodes": 24,
+      "edges": 33,
+      "canvas": {
+        "w": 1360,
+        "h": 2087
+      },
+      "routePoints": 139,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [
+        {
+          "a": "n2→n18",
+          "b": "n14→n6",
+          "at": [
+            300,
+            1290
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n2→n18",
+          "b": "n6→n7",
+          "at": [
+            300,
+            614
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n2→n18",
+          "b": "n3→n10",
+          "at": [
+            300,
+            253
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n2→n18",
+          "b": "n4→n15",
+          "at": [
+            300,
+            1060
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n2→n18",
+          "b": "n11→n5",
+          "at": [
+            300,
+            358
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n2→n18",
+          "b": "n12→n16",
+          "at": [
+            300,
+            1009
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n2→n18",
+          "b": "n6→n8",
+          "at": [
+            300,
+            485
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n2→n18",
+          "b": "n14→n19",
+          "at": [
+            300,
+            1442
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n2→n18",
+          "b": "n24→n13",
+          "at": [
+            300,
+            1225
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n2→n18",
+          "b": "n21→n13",
+          "at": [
+            300,
+            1270
+          ],
+          "styles": "main×dash"
+        },
+        {
+          "a": "n18→n13",
+          "b": "n14→n6",
+          "at": [
+            295,
+            1290
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n18→n13",
+          "b": "n14→n19",
+          "at": [
+            295,
+            1442
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n14→n6",
+          "b": "n11→n4",
+          "at": [
+            302,
+            860
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n14→n6",
+          "b": "n12→n16",
+          "at": [
+            302,
+            1009
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n14→n6",
+          "b": "n17→n1",
+          "at": [
+            302,
+            1280
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n14→n6",
+          "b": "n24→n13",
+          "at": [
+            302,
+            1225
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n6→n7",
+          "b": "n11→n4",
+          "at": [
+            300,
+            614
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n6→n7",
+          "b": "n17→n1",
+          "at": [
+            300,
+            614
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n9→n3",
+          "b": "n5→n12",
+          "at": [
+            120,
+            358
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n9→n3",
+          "b": "n8→n20",
+          "at": [
+            120,
+            545
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n3→n10",
+          "b": "n11→n4",
+          "at": [
+            300,
+            253
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n3→n10",
+          "b": "n17→n1",
+          "at": [
+            300,
+            253
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n3→n10",
+          "b": "n6→n8",
+          "at": [
+            302,
+            485
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n11→n4",
+          "b": "n4→n15",
+          "at": [
+            302,
+            860
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n11→n4",
+          "b": "n22→n10",
+          "at": [
+            305,
+            860
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n11→n4",
+          "b": "n11→n5",
+          "at": [
+            300,
+            358
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n11→n4",
+          "b": "n6→n8",
+          "at": [
+            300,
+            485
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n4→n15",
+          "b": "n12→n16",
+          "at": [
+            302,
+            1009
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n4→n15",
+          "b": "n6→n8",
+          "at": [
+            302,
+            485
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n4→n15",
+          "b": "n17→n1",
+          "at": [
+            300,
+            1060
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n11→n5",
+          "b": "n22→n10",
+          "at": [
+            305,
+            850
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n11→n5",
+          "b": "n6→n8",
+          "at": [
+            302,
+            485
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n11→n5",
+          "b": "n17→n1",
+          "at": [
+            300,
+            358
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n5→n12",
+          "b": "n8→n20",
+          "at": [
+            118,
+            545
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n12→n16",
+          "b": "n17→n1",
+          "at": [
+            300,
+            1009
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n12→n16",
+          "b": "n22→n10",
+          "at": [
+            305,
+            1009
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n12→n16",
+          "b": "n22→n11",
+          "at": [
+            305,
+            1009
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n6→n8",
+          "b": "n17→n1",
+          "at": [
+            300,
+            485
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n8→n20",
+          "b": "n22→n12",
+          "at": [
+            115,
+            960
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n14→n19",
+          "b": "n21→n13",
+          "at": [
+            302,
+            1442
+          ],
+          "styles": "main×dash"
+        },
+        {
+          "a": "n14→n19",
+          "b": "n22→n10",
+          "at": [
+            305,
+            1442
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n14→n19",
+          "b": "n22→n11",
+          "at": [
+            305,
+            1442
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n14→n19",
+          "b": "n22→n17",
+          "at": [
+            305,
+            1442
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n18→n21",
+          "b": "n22→n10",
+          "at": [
+            305,
+            1663
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n18→n21",
+          "b": "n22→n11",
+          "at": [
+            305,
+            1663
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n18→n21",
+          "b": "n22→n17",
+          "at": [
+            305,
+            1663
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n17→n1",
+          "b": "n21→n13",
+          "at": [
+            302,
+            1280
+          ],
+          "styles": "main×dash"
+        },
+        {
+          "a": "n17→n1",
+          "b": "n22→n10",
+          "at": [
+            305,
+            1280
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n17→n1",
+          "b": "n22→n11",
+          "at": [
+            305,
+            1280
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n17→n1",
+          "b": "n24→n13",
+          "at": [
+            300,
+            1225
+          ],
+          "styles": "main×main"
+        },
+        {
+          "a": "n24→n13",
+          "b": "n22→n10",
+          "at": [
+            305,
+            1225
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n24→n13",
+          "b": "n22→n11",
+          "at": [
+            305,
+            1225
+          ],
+          "styles": "main×grayDash"
+        },
+        {
+          "a": "n20→n21",
+          "b": "n23→n18",
+          "at": [
+            300,
+            1654
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "n20→n21",
+          "b": "n22→n10",
+          "at": [
+            305,
+            1663
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "n20→n21",
+          "b": "n22→n11",
+          "at": [
+            305,
+            1663
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "n20→n21",
+          "b": "n22→n17",
+          "at": [
+            305,
+            1663
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "n21→n13",
+          "b": "n22→n10",
+          "at": [
+            305,
+            1594
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "n21→n13",
+          "b": "n22→n11",
+          "at": [
+            305,
+            1594
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "n21→n13",
+          "b": "n22→n17",
+          "at": [
+            305,
+            1594
+          ],
+          "styles": "dash×grayDash"
+        },
+        {
+          "a": "n22→n10",
+          "b": "n23→n19",
+          "at": [
+            305,
+            1579
+          ],
+          "styles": "grayDash×grayDash"
+        },
+        {
+          "a": "n22→n11",
+          "b": "n23→n19",
+          "at": [
+            305,
+            1579
+          ],
+          "styles": "grayDash×grayDash"
+        },
+        {
+          "a": "n22→n17",
+          "b": "n23→n19",
+          "at": [
+            305,
+            1579
+          ],
+          "styles": "grayDash×grayDash"
+        },
+        {
+          "a": "n23→n18",
+          "b": "n23→n19",
+          "at": [
+            300,
+            1743
+          ],
+          "styles": "grayDash×grayDash"
+        }
+      ],
+      "routeLength": 18754,
+      "bends": 73,
+      "labels": {
+        "total": 33,
+        "onOwnNode": [
+          {
+            "label": "建档通过",
+            "edge": "n1→n2",
+            "node": "n1"
+          },
+          {
+            "label": "建档通过",
+            "edge": "n1→n2",
+            "node": "n2"
+          },
+          {
+            "label": "购物咨询",
+            "edge": "n6→n8",
+            "node": "n6"
+          },
+          {
+            "label": "购物咨询",
+            "edge": "n6→n8",
+            "node": "n8"
+          },
+          {
+            "label": "蓝图与标准落地",
+            "edge": "n24→n13",
+            "node": "n13"
+          },
+          {
+            "label": "蓝图与标准落地",
+            "edge": "n24→n13",
+            "node": "n24"
+          },
+          {
+            "label": "会话评价反哺",
+            "edge": "n20→n21",
+            "node": "n20"
+          },
+          {
+            "label": "会话评价反哺",
+            "edge": "n20→n21",
+            "node": "n21"
+          }
+        ],
+        "onOtherNode": [],
+        "onOtherEdge": [
+          {
+            "label": "推品送审",
+            "edge": "n2→n18",
+            "crossedEdge": "n11→n4"
+          },
+          {
+            "label": "审核通过上架",
+            "edge": "n18→n13",
+            "crossedEdge": "n14→n19"
+          },
+          {
+            "label": "商品发布",
+            "edge": "n13→n14",
+            "crossedEdge": "n14→n6"
+          },
+          {
+            "label": "二次询价回流",
+            "edge": "n7→n9",
+            "crossedEdge": "n2→n18"
+          },
+          {
+            "label": "定标生成订单",
+            "edge": "n10→n11",
+            "crossedEdge": "n6→n11"
+          },
+          {
+            "label": "双向对账",
+            "edge": "n5→n12",
+            "crossedEdge": "n9→n3"
+          },
+          {
+            "label": "对账数据",
+            "edge": "n12→n16",
+            "crossedEdge": "n2→n18"
+          },
+          {
+            "label": "购物咨询",
+            "edge": "n6→n8",
+            "crossedEdge": "n2→n18"
+          },
+          {
+            "label": "会话接入",
+            "edge": "n8→n20",
+            "crossedEdge": "n9→n3"
+          },
+          {
+            "label": "导购配置",
+            "edge": "n14→n19",
+            "crossedEdge": "n2→n18"
+          },
+          {
+            "label": "巡检沉淀",
+            "edge": "n18→n21",
+            "crossedEdge": "n21→n13"
+          },
+          {
+            "label": "蓝图与标准落地",
+            "edge": "n24→n13",
+            "crossedEdge": "n2→n18"
+          },
+          {
+            "label": "会话评价反哺",
+            "edge": "n20→n21",
+            "crossedEdge": "n18→n21"
+          },
+          {
+            "label": "模板自生长",
+            "edge": "n21→n13",
+            "crossedEdge": "n14→n19"
+          },
+          {
+            "label": "物流轨迹",
+            "edge": "n22→n11",
+            "crossedEdge": "n14→n19"
+          },
+          {
+            "label": "电子发票/票税",
+            "edge": "n22→n12",
+            "crossedEdge": "n22→n10"
+          },
+          {
+            "label": "IDM 单点登录",
+            "edge": "n22→n17",
+            "crossedEdge": "n21→n13"
+          },
+          {
+            "label": "模型供能",
+            "edge": "n23→n18",
+            "crossedEdge": "n23→n19"
+          }
+        ],
+        "labelOverlaps": [
+          {
+            "a": "n18→n13",
+            "b": "n14→n19"
+          },
+          {
+            "a": "n14→n6",
+            "b": "n12→n16"
+          },
+          {
+            "a": "n6→n7",
+            "b": "n3→n10"
+          },
+          {
+            "a": "n6→n7",
+            "b": "n11→n4"
+          },
+          {
+            "a": "n3→n10",
+            "b": "n11→n4"
+          },
+          {
+            "a": "n4→n15",
+            "b": "n17→n1"
+          },
+          {
+            "a": "n15→n12",
+            "b": "n12→n16"
+          },
+          {
+            "a": "n14→n19",
+            "b": "n21→n13"
+          },
+          {
+            "a": "n14→n19",
+            "b": "n22→n10"
+          },
+          {
+            "a": "n14→n19",
+            "b": "n22→n11"
+          },
+          {
+            "a": "n18→n21",
+            "b": "n22→n17"
+          },
+          {
+            "a": "n21→n13",
+            "b": "n22→n10"
+          },
+          {
+            "a": "n23→n18",
+            "b": "n23→n19"
+          }
+        ],
+        "outOfCanvas": []
+      }
+    },
+    "data-desens.json": {
+      "nodes": 7,
+      "edges": 8,
+      "canvas": {
+        "w": 1360,
+        "h": 562
+      },
+      "routePoints": 28,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [
+        {
+          "a": "e3→e4",
+          "b": "e6→e7",
+          "at": [
+            751,
+            294
+          ],
+          "styles": "main×main"
+        }
+      ],
+      "routeLength": 2023,
+      "bends": 12,
+      "labels": {
+        "total": 3,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    },
+    "data-governance.json": {
+      "nodes": 10,
+      "edges": 9,
+      "canvas": {
+        "w": 1360,
+        "h": 518
+      },
+      "routePoints": 22,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [],
+      "routeLength": 403,
+      "bends": 4,
+      "labels": {
+        "total": 0,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    },
+    "overall-flow.json": {
+      "nodes": 19,
+      "edges": 14,
+      "canvas": {
+        "w": 1360,
+        "h": 781
+      },
+      "routePoints": 34,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [],
+      "routeLength": 2268,
+      "bends": 6,
+      "labels": {
+        "total": 2,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    },
+    "search-query.json": {
+      "nodes": 7,
+      "edges": 7,
+      "canvas": {
+        "w": 1360,
+        "h": 708
+      },
+      "routePoints": 23,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [],
+      "routeLength": 2983,
+      "bends": 9,
+      "labels": {
+        "total": 2,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    },
+    "service-faq.json": {
+      "nodes": 8,
+      "edges": 11,
+      "canvas": {
+        "w": 1360,
+        "h": 775
+      },
+      "routePoints": 39,
+      "outOfCanvas": [],
+      "dangerBand": [],
+      "crossings": [
+        {
+          "a": "f2→f5",
+          "b": "f4→f6",
+          "at": [
+            828,
+            363
+          ],
+          "styles": "main×grayDash"
+        }
+      ],
+      "routeLength": 4673,
+      "bends": 17,
+      "labels": {
+        "total": 6,
+        "onOwnNode": [],
+        "onOtherNode": [],
+        "onOtherEdge": [
+          {
+            "label": "真值类",
+            "edge": "f2→f5",
+            "crossedEdge": "f2→f6"
+          },
+          {
+            "label": "域外/低置信",
+            "edge": "f2→f6",
+            "crossedEdge": "f2→f5"
+          },
+          {
+            "label": "检索空→拒答",
+            "edge": "f4→f6",
+            "crossedEdge": "f2→f5"
+          }
+        ],
+        "labelOverlaps": [],
+        "outOfCanvas": []
+      }
+    }
+  }
+}

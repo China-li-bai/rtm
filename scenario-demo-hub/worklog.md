@@ -746,3 +746,48 @@
 **验证**：tsc ✓ / build ✓ 791.06KB；DOM 实测 clip-path/边框层/nowrap/选中填充全对；**视觉核验新链路成立**——`tab.screenshot()` 存本地 → Read 上传 CDN → `analyze_image(CDN URL)` 判读，视觉模型确认「菱形+橙描边白填充+单行居中+连线恰接四顶点」。此链路推翻旧结论"截图经 CDN 不可视觉验证"。
 
 **关键问题与解决**：clip-path 方案对比 rotate(45deg) 方案胜出——rotate 会使视觉盒越过声明几何（88×58 旋转后外扩至 103×103），边线 dock 点与形状错位、还可能视觉越泳道；clip-path 严格贴合声明盒，layout/validate 全链路零影响。
+
+---
+
+## 任务AC｜流程图布局布线治理：计划书审查整改 + 开发排期（2026-10-10 11:00 CST 开始，审查整改完成）
+
+**任务描述**：用户提供 `review/rtm-flow-layout-routing-agent-plan.md`（外部 Agent 从 GitHub main 写成的实施任务书），要求审查、整改文档并安排开发计划。
+
+### 审查结论（本地逐条复核，main@60c5e92，工作树仅该文档未跟踪）
+- **初稿核心事实全部属实**：g5→u3 唯一越界边（route `[[1247,368],[1370,368],[1370,124],[1248,124]]`，maxX=1370，无 Y 越界）；bar1 x=130/w=1218 右缘 1348=CONTENT_RIGHT+buffer≈1358；layoutLane 只传 children 不喂边；routes 键 `${from}→${to}`（:785/:916）；validate.ts 检查清单与文档 §1.6 逐条吻合；schema 无 edge id/routeRole；knowledge 文档 GRID_GAP=40 过期（tokens.ts=30）；依赖与 build 顺序属实。
+- **初稿遗漏、已补入文档的 6 项事实**：①14 份配置**全部** autoLayout:true（初稿仅点名 3 份；auto-layout.ts 头注释"attr-extraction 手工布局"已过期）；②泳道层名带障碍 BAND_FAR_LEFT=-1000 已存在、**右缘无对称防护**（g5→u3 右逃逸第二成因）；③obstacle-router@0.1.2 的 crossingPenalty 已导出（默认 0）、ConnRef.setHateCrossings 存在（connector.d.ts:191）、5 个晚绑定 helper 已接线；④14 份均无同对平行边（键碰撞属预防性修复）；⑤build-ai-chat-guide.ts 须随 schema 同步；⑥validate 基线 0 error/5 warn（cat-governance×1+contract-blueprint×4 标签-节点重叠）。
+- **整改裁定**：edge id 直接必填 + 14 份一次性脚本回填（无手工布局配置，optional 过渡态无受益者）；routeRole 默认建议 primary（对齐 style 默认 main）；新增右缘画布边界障碍候选技术（镜像 BAND_FAR_LEFT，纯障碍注册非自创算法）。
+
+### 交付
+- 计划书就地整改 12 处：§1.2 实测数据、§1.4 右缘无防护补因、§1.5 API 事实+键碰撞定性、§4.A.7 右缘障碍候选、§4.B 回归范围改全量 14 份、§4.C 三条裁定（id 必填/routeRole 默认/build 脚本同步）、§4.F 头注释修正项、§5.2 去"待确认"、§7 阶段0 标注本地就绪+基线已测/阶段1 回填范围改 14 份、§8 验收范围标注、§11 重写为本地复核记录。
+- **开发计划排期**（文档 §7 为事实源）：阶段0 指标基线脚本（validate 基线已测）→ 阶段1 P0（schema id/routeRole + bar1 语义分离 + 越界修复 + route bounds 硬校验）→ 阶段2 交叉/标签治理 → 阶段3 ELK 拓扑 POC（P2）→ 阶段4 回归文档构建。
+
+### 状态
+- 审查整改 100%；**阶段0-4 实施未开始**。下一步入口：阶段0 指标脚本（route bounds/交叉数/路径长度/构建耗时）。
+
+---
+
+## 任务AC 实施（2026-10-10 12:40 CST，阶段0/1/2/4 完成；阶段3 POC 未启动）
+
+**前置**：用户委托对两项裁定自行判断——①bar1 语义；②标签/交叉门槛定级。裁定与依据见计划书 §11 实施记录。
+
+### 交付
+- **schema**（src/schema/scenario.ts）：edge `id` 必填 + `routeRole` 默认 primary + 节点 `routingObstacle` 覆盖位；rules.ts 补边 id 唯一性 error。
+- **迁移**（review/repair-edge-id-role.ts，一次性）：14 份 167 边回填 `e-${from}-${to}` id；ai-chat-guide 21 条人工标注 routeRole（primary 7/branch 4/feedback 3/support 7）+ bar1 `routingObstacle:false`；变更白名单自校验。build-ai-chat-guide.ts 范本同步（id+role+bar1 字段）。
+- **auto-layout.ts**：路线 Map 改 edge id 键（main() 前置校验 id 必填唯一）；非障碍端点 `ConnEnd.fromPoint` 贴边挂接（横条感知：面向对端、落点在对端中心正下方，杜绝沿横条内部刺线）；`LAYOUT_CROSSING=off|low|mid` 试验 seam；头注释 attr-extraction 过期说法纠错。
+- **几何硬门禁**（src/flow/geometry-rules.ts 共享模块 + validate.ts 接入）：error=route 越界/连续重复点/标签出画布/标签压非关联节点（基线 0 命中才敢设）+ 既有规则；warn=自身端点标签/标签互压/压线/边交叉聚合上报（主链×主链单独计数）。metrics 脚本（scripts/flow-metrics.ts）与测试共用其交叉/标签估算。
+- **测试**：rules.test 12/12（补 id 重复/缺 id 负向）、geometry.test 14/14 新建（含 g5→u3 回归 fixture + phantom 豁免 + 平行边 + 交叉计数）；EdgeLayer key 换 e.id。
+
+### 核心结果（baseline→after 指标存 review/flow-metrics-*.json）
+- **g5→u3 越界根治**：x=1370→1248（bar1 摘障碍走内部通道）；u3→g3 贴边线 1358→1248 同步内部化；越界 2→0、危险带 8→4、路径总长 -1143、交叉 89→91（ai-chat-guide 主链×主链 0）。
+- **画布边界墙方案否决**（实测）：ai-recommend e5→r3/attr-extraction nx→n8 依赖 bar 右缘 2px 缝隙（x=1355/1358）贴边，墙会挤死走廊→路由失败；containment 交 validate。
+- **crossing 惩罚全局启用否决**（实测）：off=1s；low(50) 在 contract-blueprint（33 边全默认 primary）>14min CPU 未完成；默认锁 off，开关留档。
+- 回归全绿：layout 幂等（二次零 diff）、其余 12 份纯 id 增量、validate 14 份 0 error/22 warn、tsc clean、build 794.20KB（gzip 257.33KB，+3.7KB 来自 id/routeRole 内嵌）；DOM+视觉抽查通过（六泳道/23 path/16 标签/节点画布内；"06 裁切"系截图滚动伪影，DOM 实测排除）。
+
+### 关键问题与解决
+- phantom 端点首版按 choosePins 横向偏好挂 bar 右缘中点 → 线沿横条内部穿行 190px 刺出；改为「面向对端+横条感知」贴边（u3→bar1 = 干净垂直落线）。
+- 惩罚试验中途 contract-blueprint 卡死 14min+：kill 后 off 档重跑恢复，diff 回到已知形态（教训：破坏性基准要先想清楚卡死时的状态恢复路径）。
+- zsh `(time cmd)` 子壳管道与 macOS date %3N 均不可用——基准计时用 date +%s 秒级即可（量级差 300x+，精度足够）。
+
+### 未做（后续候选）
+- 阶段3 ELK 拓扑感知布局 POC（P2，不挡交付）；contract-blueprint 63 对交叉与标签互压存量治理；primary-primary error 升级；其余 13 份 routeRole 人工标注；拆分提交建议（schema/算法 vs 几何产物两批）。

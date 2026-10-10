@@ -709,7 +709,8 @@
           "续聊不丢前几轮条件"
         ],
         "beforeAfter": [],
-        "h": 40
+        "h": 40,
+        "routingObstacle": false
       },
       {
         "id": "c1",
@@ -1007,8 +1008,10 @@
     ],
     "edges": [
       {
+        "id": "e-u1-c1",
         "from": "u1",
         "to": "c1",
+        "routeRole": "primary",
         "route": [
           [
             218,
@@ -1021,20 +1024,18 @@
         ]
       },
       {
+        "id": "e-c1-g1",
         "from": "c1",
         "to": "g1",
+        "routeRole": "primary",
         "route": [
           [
             218,
             266
           ],
           [
-            120,
-            266
-          ],
-          [
-            120,
-            377
+            218,
+            322
           ],
           [
             218,
@@ -1043,8 +1044,10 @@
         ]
       },
       {
+        "id": "e-g1-gx",
         "from": "g1",
         "to": "gx",
+        "routeRole": "primary",
         "route": [
           [
             305,
@@ -1057,8 +1060,10 @@
         ]
       },
       {
+        "id": "e-gx-s1",
         "from": "gx",
         "to": "s1",
+        "routeRole": "primary",
         "label": "是 · 条件齐了",
         "route": [
           [
@@ -1084,8 +1089,10 @@
         ]
       },
       {
+        "id": "e-gx-g3",
         "from": "gx",
         "to": "g3",
+        "routeRole": "branch",
         "style": "dash",
         "label": "否 · 缺什么问什么",
         "route": [
@@ -1104,8 +1111,10 @@
         ]
       },
       {
+        "id": "e-g3-s1",
         "from": "g3",
         "to": "s1",
+        "routeRole": "primary",
         "route": [
           [
             988,
@@ -1126,8 +1135,10 @@
         ]
       },
       {
+        "id": "e-g3-g1",
         "from": "g3",
         "to": "g1",
+        "routeRole": "feedback",
         "style": "dash",
         "label": "补充后增量解析",
         "route": [
@@ -1162,8 +1173,10 @@
         ]
       },
       {
+        "id": "e-s1-g5",
         "from": "s1",
         "to": "g5",
+        "routeRole": "primary",
         "label": "检索原值",
         "route": [
           [
@@ -1189,20 +1202,22 @@
         ]
       },
       {
+        "id": "e-g5-u3",
         "from": "g5",
         "to": "u3",
+        "routeRole": "primary",
         "route": [
           [
             1247,
             368
           ],
           [
-            1370,
-            368
+            1247,
+            252
           ],
           [
-            1370,
-            124
+            1248,
+            252
           ],
           [
             1248,
@@ -1211,8 +1226,10 @@
         ]
       },
       {
+        "id": "e-u3-g3",
         "from": "u3",
         "to": "g3",
+        "routeRole": "feedback",
         "style": "dash",
         "label": "追问 / 改条件 · 继续收敛",
         "route": [
@@ -1221,16 +1238,12 @@
             124
           ],
           [
-            1358,
-            124
-          ],
-          [
-            1358,
-            342
+            1248,
+            240
           ],
           [
             893,
-            342
+            240
           ],
           [
             893,
@@ -1238,41 +1251,37 @@
           ]
         ],
         "labelAt": [
-          1045,
-          325
+          990,
+          223
         ]
       },
       {
+        "id": "e-u3-bar1",
         "from": "u3",
         "to": "bar1",
+        "routeRole": "support",
         "style": "grayDash",
         "label": "会话留痕",
         "route": [
           [
-            1155,
-            70
+            1248,
+            124
           ],
           [
-            1155,
-            200
-          ],
-          [
-            1348,
-            200
-          ],
-          [
-            1348,
-            296
+            1248,
+            276
           ]
         ],
         "labelAt": [
-          1222,
-          183
+          1256,
+          191
         ]
       },
       {
+        "id": "e-gx-h1",
         "from": "gx",
         "to": "h1",
+        "routeRole": "branch",
         "style": "dash",
         "label": "没听懂 · 示例引导",
         "route": [
@@ -1303,8 +1312,10 @@
         ]
       },
       {
+        "id": "e-s1-h1",
         "from": "s1",
         "to": "h1",
+        "routeRole": "branch",
         "style": "dash",
         "label": "零结果 · 放宽建议",
         "route": [
@@ -1331,8 +1342,10 @@
         ]
       },
       {
+        "id": "e-g5-h1",
         "from": "g5",
         "to": "h1",
+        "routeRole": "branch",
         "style": "dash",
         "label": "超时 · 降级承接",
         "route": [
@@ -1359,8 +1372,10 @@
         ]
       },
       {
+        "id": "e-h1-u1",
         "from": "h1",
         "to": "u1",
+        "routeRole": "feedback",
         "style": "dash",
         "label": "示例引导 · 重新表达",
         "route": [
@@ -1373,11 +1388,11 @@
             824
           ],
           [
-            110,
+            385,
             824
           ],
           [
-            110,
+            385,
             124
           ],
           [
@@ -1386,13 +1401,15 @@
           ]
         ],
         "labelAt": [
-          437,
+          575,
           807
         ]
       },
       {
+        "id": "e-d1-g1",
         "from": "d1",
         "to": "g1",
+        "routeRole": "support",
         "style": "grayDash",
         "label": "单位与用户身份",
         "route": [
@@ -1411,8 +1428,10 @@
         ]
       },
       {
+        "id": "e-d2-g3",
         "from": "d2",
         "to": "g3",
+        "routeRole": "support",
         "style": "grayDash",
         "label": "项目 · 预算归属",
         "route": [
@@ -1439,8 +1458,10 @@
         ]
       },
       {
+        "id": "e-d3-s1",
         "from": "d3",
         "to": "s1",
+        "routeRole": "support",
         "style": "grayDash",
         "label": "目录与权限边界",
         "route": [
@@ -1459,8 +1480,10 @@
         ]
       },
       {
+        "id": "e-d4-g5",
         "from": "d4",
         "to": "g5",
+        "routeRole": "support",
         "style": "grayDash",
         "label": "价格库存原值回填",
         "route": [
@@ -1491,8 +1514,10 @@
         ]
       },
       {
+        "id": "e-d5-g5",
         "from": "d5",
         "to": "g5",
+        "routeRole": "support",
         "style": "grayDash",
         "label": "协议标签 · 优先推荐",
         "route": [
@@ -1519,8 +1544,10 @@
         ]
       },
       {
+        "id": "e-d6-s1",
         "from": "d6",
         "to": "s1",
+        "routeRole": "support",
         "style": "grayDash",
         "label": "单位偏好生效",
         "route": [

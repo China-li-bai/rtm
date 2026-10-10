@@ -155,8 +155,17 @@ export function validateConfig(raw: unknown, source: string): Issue[] {
     }
   }
 
-  // 边引用完整性
+  // 边引用完整性 + 边 id 唯一性（路线 Map 以 id 为键，重复即互相覆盖）
+  const edgeIds = new Set<string>();
   for (const e of cfg.flow.edges) {
+    if (edgeIds.has(e.id)) {
+      issues.push({
+        level: "error",
+        where: "flow.edges",
+        message: `边 id "${e.id}" 重复（${e.from}→${e.to}）——路线键会互相覆盖`,
+      });
+    }
+    edgeIds.add(e.id);
     for (const [end, id] of [
       ["from", e.from],
       ["to", e.to],
@@ -165,7 +174,7 @@ export function validateConfig(raw: unknown, source: string): Issue[] {
         issues.push({
           level: "error",
           where: `flow.edges`,
-          message: `边 ${e.from}→${e.to} 的 ${end} 节点 "${id}" 不存在`,
+          message: `边 ${e.id}（${e.from}→${e.to}）的 ${end} 节点 "${id}" 不存在`,
         });
       }
     }

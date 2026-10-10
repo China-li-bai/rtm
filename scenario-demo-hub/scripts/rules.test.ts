@@ -81,8 +81,24 @@ expect("基线配置零错误零警告", validateConfig(good, "base"), { errors:
 // 边引用不存在节点
 {
   const c = clone();
-  c.flow.edges.push({ from: "n1", to: "n999", style: "main" });
+  c.flow.edges.push({ id: "e-test-dangle", from: "n1", to: "n999", routeRole: "primary", style: "main" });
   expect("悬空边 → error", validateConfig(c, "t"), { errors: 1, match: /不存在/ });
+}
+
+// 边 id 重复（路线 Map 键冲突）
+{
+  const c = clone();
+  const first = c.flow.edges[0];
+  c.flow.edges.push({ id: first.id, from: first.from, to: first.to, routeRole: "primary", style: "main" });
+  expect("边 id 重复 → error", validateConfig(c, "t"), { errors: 1, match: /重复/ });
+}
+
+// 边缺 id（schema 必填，报错经 zod issue 走 error 通道）
+{
+  const c = clone();
+  const e0 = c.flow.edges[0];
+  c.flow.edges[0] = { from: e0.from, to: e0.to, style: e0.style } as typeof c.flow.edges[0];
+  expect("边缺 id → error", validateConfig(c, "t"), { errors: 1 });
 }
 
 // 红线1：方法论提示语 → warn

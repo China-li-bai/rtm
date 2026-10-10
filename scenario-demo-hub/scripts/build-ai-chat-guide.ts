@@ -29,7 +29,7 @@ const QUANT_CLAIM = /\d+(\.\d+)?\s*[%％万亿条倍分钟小时天元个次叶�
 const CALIBER_WORDS = ["示意", "约", "≈", "基线", "SOW", "实测", "示例", "对标"];
 
 type Node = Record<string, unknown> & { id: string; w: number; laneIndex: number; col?: number; row?: number; solves: Array<{ ref: string; how: string }> };
-type Edge = { from: string; to: string; style?: string; label?: string };
+type Edge = { id: string; from: string; to: string; routeRole: "primary" | "branch" | "feedback" | "support"; style?: string; label?: string };
 
 // ———————————————————— 配置正文 ————————————————————
 
@@ -351,7 +351,7 @@ const nodes: Node[] = [
     beforeAfter: [{ dim: "责任边界", before: "工具代下单出错责任不清（示意）", after: "推荐到加购为止，审批走既有流程" }],
   },
   {
-    id: "bar1", laneIndex: 1, row: 1, w: 200, x: 130, y: 0, no: "07", kind: "bar",
+    id: "bar1", laneIndex: 1, row: 1, w: 200, x: 130, y: 0, no: "07", kind: "bar", routingObstacle: false,
     title: "会话留痕 · 历史可续聊",
     aip: "AIP-028",
     solves: [{ ref: "S4", how: "对话与清单全程留痕，比选周期长的采购隔天接着聊（AIP-028）。" }],
@@ -496,27 +496,27 @@ const nodes: Node[] = [
 ];
 
 const edges: Edge[] = [
-  { from: "u1", to: "c1" },
-  { from: "c1", to: "g1" },
-  { from: "g1", to: "gx" },
-  { from: "gx", to: "s1", label: "是 · 条件齐了" },
-  { from: "gx", to: "g3", style: "dash", label: "否 · 缺什么问什么" },
-  { from: "g3", to: "s1" },
-  { from: "g3", to: "g1", style: "dash", label: "补充后增量解析" },
-  { from: "s1", to: "g5", label: "检索原值" },
-  { from: "g5", to: "u3" },
-  { from: "u3", to: "g3", style: "dash", label: "追问 / 改条件 · 继续收敛" },
-  { from: "u3", to: "bar1", style: "grayDash", label: "会话留痕" },
-  { from: "gx", to: "h1", style: "dash", label: "没听懂 · 示例引导" },
-  { from: "s1", to: "h1", style: "dash", label: "零结果 · 放宽建议" },
-  { from: "g5", to: "h1", style: "dash", label: "超时 · 降级承接" },
-  { from: "h1", to: "u1", style: "dash", label: "示例引导 · 重新表达" },
-  { from: "d1", to: "g1", style: "grayDash", label: "单位与用户身份" },
-  { from: "d2", to: "g3", style: "grayDash", label: "项目 · 预算归属" },
-  { from: "d3", to: "s1", style: "grayDash", label: "目录与权限边界" },
-  { from: "d4", to: "g5", style: "grayDash", label: "价格库存原值回填" },
-  { from: "d5", to: "g5", style: "grayDash", label: "协议标签 · 优先推荐" },
-  { from: "d6", to: "s1", style: "grayDash", label: "单位偏好生效" },
+  { id: "e-u1-c1", from: "u1", to: "c1", routeRole: "primary" },
+  { id: "e-c1-g1", from: "c1", to: "g1", routeRole: "primary" },
+  { id: "e-g1-gx", from: "g1", to: "gx", routeRole: "primary" },
+  { id: "e-gx-s1", from: "gx", to: "s1", routeRole: "primary", label: "是 · 条件齐了" },
+  { id: "e-gx-g3", from: "gx", to: "g3", routeRole: "branch", style: "dash", label: "否 · 缺什么问什么" },
+  { id: "e-g3-s1", from: "g3", to: "s1", routeRole: "primary" },
+  { id: "e-g3-g1", from: "g3", to: "g1", routeRole: "feedback", style: "dash", label: "补充后增量解析" },
+  { id: "e-s1-g5", from: "s1", to: "g5", routeRole: "primary", label: "检索原值" },
+  { id: "e-g5-u3", from: "g5", to: "u3", routeRole: "primary" },
+  { id: "e-u3-g3", from: "u3", to: "g3", routeRole: "feedback", style: "dash", label: "追问 / 改条件 · 继续收敛" },
+  { id: "e-u3-bar1", from: "u3", to: "bar1", routeRole: "support", style: "grayDash", label: "会话留痕" },
+  { id: "e-gx-h1", from: "gx", to: "h1", routeRole: "branch", style: "dash", label: "没听懂 · 示例引导" },
+  { id: "e-s1-h1", from: "s1", to: "h1", routeRole: "branch", style: "dash", label: "零结果 · 放宽建议" },
+  { id: "e-g5-h1", from: "g5", to: "h1", routeRole: "branch", style: "dash", label: "超时 · 降级承接" },
+  { id: "e-h1-u1", from: "h1", to: "u1", routeRole: "feedback", style: "dash", label: "示例引导 · 重新表达" },
+  { id: "e-d1-g1", from: "d1", to: "g1", routeRole: "support", style: "grayDash", label: "单位与用户身份" },
+  { id: "e-d2-g3", from: "d2", to: "g3", routeRole: "support", style: "grayDash", label: "项目 · 预算归属" },
+  { id: "e-d3-s1", from: "d3", to: "s1", routeRole: "support", style: "grayDash", label: "目录与权限边界" },
+  { id: "e-d4-g5", from: "d4", to: "g5", routeRole: "support", style: "grayDash", label: "价格库存原值回填" },
+  { id: "e-d5-g5", from: "d5", to: "g5", routeRole: "support", style: "grayDash", label: "协议标签 · 优先推荐" },
+  { id: "e-d6-s1", from: "d6", to: "s1", routeRole: "support", style: "grayDash", label: "单位偏好生效" },
 ];
 
 const chain = ["u1", "g1", "gx", "g3", "s1", "g5", "u3", "bar1"];

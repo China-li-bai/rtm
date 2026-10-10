@@ -84,7 +84,7 @@ export function EdgeLayer({ visible, byId, related, worldW, worldH }: Props) {
           const st = EDGE_STROKE[e.style];
           const dim = related ? !related.eidx.has(i) : false;
           return (
-            <path key={i} d={d} fill="none" stroke={st.color} strokeWidth={st.width}
+            <path key={e.id} d={d} fill="none" stroke={st.color} strokeWidth={st.width}
               strokeDasharray={st.dash} markerEnd={st.marker} className={dim ? "dim" : undefined} />
           );
         })}
@@ -94,7 +94,7 @@ export function EdgeLayer({ visible, byId, related, worldW, worldH }: Props) {
         const at = e.labelAt ?? [0, 0];
         const dim = related ? !related.eidx.has(i) : false;
         return (
-          <div key={`lab-${i}`} className={`lab${e.style === "grayDash" ? " g" : ""}${dim ? " dim" : ""}`}
+          <div key={`lab-${e.id}`} className={`lab${e.style === "grayDash" ? " g" : ""}${dim ? " dim" : ""}`}
             style={{ left: at[0], top: at[1] }}>
             {e.label}
           </div>

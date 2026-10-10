@@ -15,8 +15,8 @@
  *     布线器，构建期把手写干线/通道算法彻底替换，从几何上保证不穿任何节点框。
  *
  * 运行时零依赖：elkjs、obstacle-router 仅构建期在 Node 离线运行（经 tsx），
- * 渲染器只消费回写的几何产物。attr-extraction.json 等手工布局文件（无 autoLayout
- * 标记）原样跳过。
+ * 渲染器只消费回写的几何产物。无 autoLayout 标记的手工布局文件原样跳过
+ * （当前 scenarios/ 下 14 份配置均已启用 autoLayout）。
  */
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -34,6 +34,7 @@ import {
   ShapeConnectionPin,
   ShapeRef,
   generateStaticOrthogonalVisGraph,
+  crossingPenalty,
   idealNudgingDistance,
   improveOrthogonalRoutes,
   segmentPenalty,
@@ -60,6 +61,18 @@ const ROW_GAP = 34; // 同层层内换行的行间距（同上）
 const SHAPE_BUFFER = 10; // 障碍外间距
 const NUDGE_DISTANCE = 12; // 平行线段理想间距
 const SEGMENT_PENALTY = 10; // 段代价（>0 才启用 nudging）
+
+// —— 交叉治理试验开关（阶段2 A/B/C 基准；API 已在 obstacle-router@0.1.2 核实：
+//    crossingPenalty 已导出、ConnRef.setHateCrossings 存在于 connector.d.ts）——
+//    LAYOUT_CROSSING=off（默认）| low（penalty 50）| mid（penalty 150）。
+//    开启时主链（routeRole=primary）连接器额外 setHateCrossings(true)。
+//    ⚠ 2026-10-10 实测（14 份配置全量 layout）：off=1s 完成；low=50 在
+//    contract-blueprint（33 边、全部默认 primary）上 >14min CPU 未完成——
+//    全局开惩罚在本场景集不可行，仅限小场景单文件实验，默认必须保持 off。
+const CROSSING_PRESETS = { off: 0, low: 50, mid: 150 } as const;
+const CROSSING_MODE = (process.env.LAYOUT_CROSSING ?? "off") as keyof typeof CROSSING_PRESETS;
+const CROSSING_PENALTY =
+  CROSSING_PRESETS[CROSSING_MODE] ?? CROSSING_PRESETS.off;
 
 type Pt = [number, number];
 
@@ -131,6 +144,8 @@ function predictNodeH(n: RawNode): number {
 interface RawNode {
   id: string;
   kind?: keyof typeof DEFAULT_H;
+  /** 摘出路由障碍（纯装饰/能力横条）：不注册 ShapeRef，端点经 ConnEnd.fromPoint 挂边中点 */
+  routingObstacle?: boolean;
   laneIndex?: number;
   col?: number;
   row?: number;
@@ -146,8 +161,12 @@ interface RawNode {
 }
 
 interface RawEdge {
+  /** 稳定唯一边 id：路线 Map 键（main() 前置校验必填且唯一） */
+  id?: string;
   from: string;
   to: string;
+  /** 业务路由角色：crossing 调优时 primary 连接器启用 setHateCrossings */
+  routeRole?: "primary" | "branch" | "feedback" | "support";
   style?: string;
   label?: string;
   via?: Pt[];
@@ -642,6 +661,10 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
   router.setRoutingParameter(shapeBufferDistance, SHAPE_BUFFER);
   router.setRoutingParameter(idealNudgingDistance, NUDGE_DISTANCE);
   router.setRoutingParameter(segmentPenalty, SEGMENT_PENALTY);
+  // 交叉治理（阶段2 基准开关）：penalty>0 时启用；主链连接器另加 setHateCrossings
+  if (CROSSING_PENALTY > 0) {
+    router.setRoutingParameter(crossingPenalty, CROSSING_PENALTY);
+  }
 
   // pin class id（按 shape 独立编号）
   const PIN_TOP = 1;
@@ -652,6 +675,8 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
   // 注意：ShapeRef/ShapeConnectionPin 实例绝不可赋 .id 属性——会覆盖库内部
   // 的 id() 方法；外部一律用 Map 关联。
   const shapes = new Map<string, AnyShape>();
+  /** 非障碍节点（routingObstacle:false）的几何盒：不注册 ShapeRef，仅端点挂接用 */
+  const phantoms = new Map<string, { x: number; y: number; w: number; h: number }>();
   /** 构造一个比例偏移引脚并关闭独占（同端口多入多出是流程图正常语义）。 */
   const makePin = (shape: AnyShape, classId: number, xOff: number, yOff: number): unknown =>
     ShapeConnectionPin.createForShape(
@@ -664,10 +689,15 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
       ConnDirAll,
     );
   for (const n of flow.nodes) {
-    const rect = new Rectangle(
-      new Point(n.x ?? 0, n.y ?? 0),
-      new Point((n.x ?? 0) + n.w, (n.y ?? 0) + (n.h ?? 0)),
-    );
+    const x = n.x ?? 0;
+    const y = n.y ?? 0;
+    const h = n.h ?? 0;
+    if (n.routingObstacle === false) {
+      // 纯装饰/能力横条：不阻断布线（连线允许从其视觉带内穿过），只留边界挂接几何
+      phantoms.set(n.id, { x, y, w: n.w, h });
+      continue;
+    }
+    const rect = new Rectangle(new Point(x, y), new Point(x + n.w, y + h));
     const shape = new ShapeRef(router as unknown as LibRouter, rect) as unknown as AnyShape;
     const pins = [
       makePin(shape, PIN_TOP, 0.5, 0.0),
@@ -747,24 +777,78 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
 
   // 保留每个 ConnRef 实例与 flow.edges 对位（库的连接器列表字段/内部顺序均不应假设）
   const conns: AnyConn[] = [];
+  /**
+   * 非障碍（phantom）端点挂接：贴边中点按「面向对端 + 横条感知」选取。
+   * 横条（w≥4h）几何中心无意义：无论横向距离多远一律上/下边贴接，
+   * 落点水平夹在「对端中心」与「横条内缩范围」之间，保证从外部垂直接入，
+   * 不出现沿横条内部穿行到边缘的刺线。
+   */
+  const nodeBox = (id: string) => {
+    const n = nodeById.get(id);
+    if (!n) throw new Error(`边端点 ${id} 不存在`);
+    return { x: n.x ?? 0, y: n.y ?? 0, w: n.w, h: n.h ?? 0 };
+  };
+  const phantomAttach = (
+    selfId: string,
+    otherId: string,
+  ): { pt: [number, number]; facing: "top" | "bottom" | "left" | "right" } => {
+    const b = phantoms.get(selfId)!;
+    const o = nodeBox(otherId);
+    const dyC = b.y + b.h / 2 - (o.y + o.h / 2);
+    const dxC = b.x + b.w / 2 - (o.x + o.w / 2);
+    const vertical = b.w >= b.h * 4 || Math.abs(dyC) >= Math.abs(dxC);
+    if (vertical) {
+      const x = Math.min(Math.max(o.x + o.w / 2, b.x + 40), b.x + b.w - 40);
+      return dyC >= 0
+        ? { pt: [x, b.y], facing: "top" }
+        : { pt: [x, b.y + b.h], facing: "bottom" };
+    }
+    const y = Math.min(Math.max(o.y + o.h / 2, b.y + 20), b.y + b.h - 20);
+    return dxC >= 0 ? { pt: [b.x, y], facing: "left" } : { pt: [b.x + b.w, y], facing: "right" };
+  };
+  const OPPOSITE_PIN: Record<string, number> = {
+    top: PIN_BOTTOM, bottom: PIN_TOP, left: PIN_RIGHT, right: PIN_LEFT,
+  };
   for (const e of flow.edges) {
-    const { srcPin, tgtPin } = choosePins(e);
+    let { srcPin, tgtPin } = choosePins(e);
     const srcShape = shapes.get(e.from);
     const tgtShape = shapes.get(e.to);
-    if (!srcShape || !tgtShape) {
-      throw new Error(`边 ${e.from}→${e.to} 引用了不存在的节点`);
+    const srcPhantom = phantoms.has(e.from);
+    const tgtPhantom = phantoms.has(e.to);
+    if (!srcShape && !srcPhantom) {
+      throw new Error(`边 ${e.id ?? `${e.from}→${e.to}`} 的源节点不在障碍/挂接表中`);
     }
-    const srcEnd = ConnEnd.fromShapePin(
-      srcShape as unknown as Parameters<typeof ConnEnd.fromShapePin>[0],
-      srcPin,
-    ) as unknown as LibConnEnd;
-    const tgtEnd = ConnEnd.fromShapePin(
-      tgtShape as unknown as Parameters<typeof ConnEnd.fromShapePin>[0],
-      tgtPin,
-    ) as unknown as LibConnEnd;
-    conns.push(
-      new ConnRef(router as unknown as LibRouter, srcEnd, tgtEnd) as unknown as AnyConn,
-    );
+    if (!tgtShape && !tgtPhantom) {
+      throw new Error(`边 ${e.id ?? `${e.from}→${e.to}`} 的目标节点不在障碍/挂接表中`);
+    }
+    let srcEnd: unknown;
+    let tgtEnd: unknown;
+    const srcPt = srcPhantom ? phantomAttach(e.from, e.to) : null;
+    const tgtPt = tgtPhantom ? phantomAttach(e.to, e.from) : null;
+    if (srcPt) tgtPin = OPPOSITE_PIN[srcPt.facing];
+    if (tgtPt) srcPin = OPPOSITE_PIN[tgtPt.facing];
+    srcEnd = srcPt
+      ? ConnEnd.fromPoint(new Point(srcPt.pt[0], srcPt.pt[1]))
+      : ConnEnd.fromShapePin(
+        srcShape as unknown as Parameters<typeof ConnEnd.fromShapePin>[0],
+        srcPin,
+      );
+    tgtEnd = tgtPt
+      ? ConnEnd.fromPoint(new Point(tgtPt.pt[0], tgtPt.pt[1]))
+      : ConnEnd.fromShapePin(
+        tgtShape as unknown as Parameters<typeof ConnEnd.fromShapePin>[0],
+        tgtPin,
+      );
+    const conn = new ConnRef(
+      router as unknown as LibRouter,
+      srcEnd as unknown as LibConnEnd,
+      tgtEnd as unknown as LibConnEnd,
+    ) as unknown as AnyConn;
+    // 交叉调优开启时，主链连接器宁绕路不交叉（branch/feedback/support 不加，避免耗时失控）
+    if (CROSSING_PENALTY > 0 && e.routeRole === "primary") {
+      (conn as { setHateCrossings?(v: boolean): void }).setHateCrossings?.(true);
+    }
+    conns.push(conn);
   }
 
   router.processTransaction();
@@ -782,7 +866,8 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     const deduped = pts.filter(
       (p, i2) => i2 === 0 || p[0] !== pts[i2 - 1][0] || p[1] !== pts[i2 - 1][1],
     );
-    routes.set(`${e.from}→${e.to}`, deduped);
+    if (!e.id) throw new Error(`边 ${e.from}→${e.to} 缺少 id（路线键须唯一）`);
+    routes.set(e.id, deduped);
   });
   return routes;
 }
@@ -808,6 +893,20 @@ async function main(): Promise<void> {
           `${file}：节点 ${n.id} 的 laneIndex=${n.laneIndex} 越界（共 ${flow.lanes.length} 条泳道）`,
         );
       }
+    }
+
+    // —— 校验：边 id 必填且唯一（路线 Map 以 id 为键，缺失/重复会互相覆盖）——
+    const seenEdgeIds = new Set<string>();
+    for (const e of flow.edges) {
+      if (!e.id) {
+        throw new Error(
+          `${file}：边 ${e.from}→${e.to} 缺少 id——先跑 review/repair-edge-id-role.ts 回填`,
+        );
+      }
+      if (seenEdgeIds.has(e.id)) {
+        throw new Error(`${file}：边 id "${e.id}" 重复（${e.from}→${e.to}）`);
+      }
+      seenEdgeIds.add(e.id);
     }
 
     const laneNodeLists: RawFlow["nodes"][] = flow.lanes.map(() => []);
@@ -913,9 +1012,9 @@ async function main(): Promise<void> {
 
     // —— 回写全部边 ——
     flow.edges.forEach((e) => {
-      const hit = routes.get(`${e.from}→${e.to}`);
+      const hit = routes.get(e.id!);
       if (!hit || hit.length < 2) {
-        throw new Error(`${file}：边 ${e.from}→${e.to} 缺少布线产物`);
+        throw new Error(`${file}：边 ${e.id}（${e.from}→${e.to}）缺少布线产物`);
       }
       e.route = hit;
       // 标签位置一律按最终路线重新计算，旧坐标（含历史手工值）每次确定性覆盖

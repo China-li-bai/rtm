@@ -113,6 +113,14 @@ export const flowNodeSchema = z.object({
   panelAip: z.string().optional(),
   kind: nodeKindSchema.default("normal"),
   /**
+   * 是否注册为路由障碍（构建期 obstacle-router 的 ShapeRef）。
+   * 缺省 true（所有节点含 bar 都是障碍——多数场景的 bar 是真流程枢纽，
+   * 如 service-faq f8 五入一出）；纯装饰/能力横条（如 ai-chat-guide bar1
+   * 「会话留痕」sink 型）置 false：不进路由障碍，允许连线从其视觉带内穿过，
+   * 端点经 ConnEnd.fromPoint 挂边中点。
+   */
+  routingObstacle: z.boolean().optional(),
+  /**
    * 所属泳道序号（= flow.lanes 的 0-based 索引，架构层归属的唯一事实源）。
    * 仅 autoLayout 场景使用：构建期据此赋 partition，避免靠坐标推断导致不幂等。
    */
@@ -156,9 +164,20 @@ export const flowNodeSchema = z.object({
 
 const edgeStyleSchema = z.enum(["main", "dash", "grayDash"]);
 
+/**
+ * 业务路由角色：驱动构建期路由优先级/通道策略（primary 优先避交叉、
+ * feedback 走外侧回连通道、support 降视觉权重），与视觉 style 正交——
+ * 虚线既可能是正常分支也可能是反馈线，禁止从 style 推导角色。
+ */
+const routeRoleSchema = z.enum(["primary", "branch", "feedback", "support"]);
+
 export const flowEdgeSchema = z.object({
+  /** 稳定唯一边 id：路线 Map 键与报错定位用，允许同 from→to 多条平行边 */
+  id: z.string().min(1),
   from: z.string().min(1),
   to: z.string().min(1),
+  /** 业务路由角色（primary=主链 / branch=条件分支 / feedback=回前序 / support=数据支撑） */
+  routeRole: routeRoleSchema.default("primary"),
   style: edgeStyleSchema.default("main"),
   /** 出锚点，默认按相对位置自动推断 */
   fromSide: z.enum(["left", "right", "top", "bottom"]).optional(),
