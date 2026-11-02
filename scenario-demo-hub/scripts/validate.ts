@@ -24,6 +24,16 @@ if (files.length === 0) {
   process.exit(1);
 }
 
+const knownIds = new Set<string>();
+for (const file of files) {
+  try {
+    const raw = JSON.parse(readFileSync(join(dir, file), "utf8")) as { id?: string };
+    if (raw.id) knownIds.add(raw.id);
+  } catch {
+    /* 解析错误留给下面的主循环报 */
+  }
+}
+
 let errors = 0;
 let warns = 0;
 const seenIds = new Map<string, string>();
@@ -49,6 +59,24 @@ for (const file of files.sort()) {
       issues.push({ level: "error", where: "(根)", message: `场景 id "${id}" 与 ${dup} 重复` });
     } else {
       seenIds.set(id, file);
+    }
+  }
+  const nodes = (raw as { flow?: { nodes?: Array<{ id?: string; enter?: string }> } }).flow?.nodes ?? [];
+  for (const n of nodes) {
+    if (!n.enter) continue;
+    if (!knownIds.has(n.enter)) {
+      issues.push({
+        level: "error",
+        where: `环节 ${n.id ?? "?"}`,
+        message: `enter "${n.enter}" 不是已有场景 id，点进去会落到空页`,
+      });
+    }
+    if (n.enter === id) {
+      issues.push({
+        level: "error",
+        where: `环节 ${n.id ?? "?"}`,
+        message: "enter 不能指向当前页",
+      });
     }
   }
   if (issues.length > 0) console.log(formatIssues(file, issues));

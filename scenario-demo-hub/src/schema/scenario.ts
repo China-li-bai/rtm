@@ -160,6 +160,11 @@ export const flowNodeSchema = z.object({
   highlights: z.array(z.string().min(1)).min(1, "至少 1 条亮点"),
   /** 环节级前后对比表 */
   beforeAfter: z.array(beforeAfterSchema).default([]),
+  /**
+   * 这一格本身是一条完整工作流时，填写目标场景 id。
+   * 点击节点直接进入该页，不再只在文案里写「请另开某页」。
+   */
+  enter: z.string().regex(/^[a-z0-9-]+$/, "enter 须为场景 id").optional(),
 });
 
 const edgeStyleSchema = z.enum(["main", "dash", "grayDash"]);

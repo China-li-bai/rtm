@@ -171,8 +171,12 @@ h2 small { font-weight: 400; font-size: 12px; color: var(--c-gray); margin-left:
   text-align: left;
   overflow-wrap: anywhere;
 }
-.node { position: absolute; background: #fff; border: 1px solid var(--c-line-2); border-radius: 8px; padding: 10px 12px 8px; cursor: pointer; transition: 0.15s; z-index: 3; box-shadow: 0 1px 4px rgba(39,49,61,0.07); }
+.node { position: absolute; background: #fff; border: 1px solid var(--c-line-2); border-radius: 8px; padding: 10px 12px 8px; cursor: pointer; transition: 0.15s; z-index: 3; box-shadow: 0 1px 4px rgba(39,49,61,0.07); text-decoration: none; color: inherit; }
+.node.enter { border-color: #2f9e6e; box-shadow: 0 0 0 1px rgba(47, 158, 110, 0.25); }
+.node.enter:hover { border-color: #217a52; }
+.node .go { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 800; color: #217a52; }
 .node:hover { border-color: var(--c-accent); box-shadow: 0 4px 14px rgba(255, 75, 22, 0.25); transform: translateY(-1px); }
+.node.enter:hover { border-color: #217a52; box-shadow: 0 4px 14px rgba(33, 122, 82, 0.28); }
 .node.sel { border: 2px solid var(--c-accent); background: var(--c-accent-soft); box-shadow: 0 4px 16px rgba(255, 75, 22, 0.3); }
 .node .no { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; background: var(--c-accent); color: #fff; font-size: 12px; font-weight: 700; align-items: center; justify-content: center; margin-right: 7px; flex: none; }
 .node .tt { font-size: 13.5px; font-weight: 700; display: flex; align-items: center; }

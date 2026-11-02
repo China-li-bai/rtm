@@ -145,7 +145,10 @@ export function ScenarioPage({ cfg }: { cfg: ScenarioConfig }) {
         <section data-sec="flow" ref={(el) => { secRefs.current.flow = el; }}>
           <h2 className="sec-h">
             <em>02</em>场景融合使用流程
-            <small>实线橙＝业务主流程 ｜ 橙虚线＝反哺 · 兜底 ｜ 点击任一环节查看它解决的场景与解法</small>
+            <small>
+              实线橙＝业务主流程 ｜ 橙虚线＝反哺 · 兜底 ｜ 点开环节先看它解决的问题和价值
+              {cfg.flow.nodes.some((n) => n.enter) ? " ｜ 标「进入工作流」的环节直接打开对应流程" : ""}
+            </small>
           </h2>
           {cfg.flow.bizContext && (
             <div className="biz-ctx">

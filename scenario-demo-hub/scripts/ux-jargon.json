@@ -1,0 +1,14 @@
+{
+  "_comment": "每项目一份，复制到 <项目根>/scripts/ux-jargon.json 后替换为本项目词汇。term=禁止出现在可渲染文本中的词；replace=建议译法（仅作提示，脚本不自动替换）。词库里只放『用户会看见就算违规』的词——脚本只扫字符串字面量与 JSX/Vue 文本节点，变量名与注释不拦。",
+  "terms": [
+    { "term": "title_mining", "replace": "标题抽取" },
+    { "term": "severity", "replace": "严重程度" },
+    { "term": "mining_id", "replace": "任务编号" },
+    { "term": "ES可搜", "replace": "前台可搜索" },
+    { "term": "问题账本", "replace": "待处理问题清单" },
+    { "term": "答卷", "replace": "已填属性" },
+    { "term": "阅卷", "replace": "校验" },
+    { "term": "落库", "replace": "保存" },
+    { "term": "兜底", "replace": "默认规则" }
+  ]
+}

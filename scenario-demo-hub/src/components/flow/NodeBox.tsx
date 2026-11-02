@@ -50,13 +50,27 @@ export function NodeBox({ n, sel, dim, onSelect, onHover }: NodeBoxProps) {
   }
   const kindCls =
     (n.kind === "highlight" ? " hl" : n.kind === "dashed" ? " dash" : n.kind === "boundary" ? " bnd" : "") +
+    (n.enter ? " enter" : "") +
     (n.aip ? " has-aip" : "");
-  return (
-    <div className={`node${kindCls}${sel ? " sel" : ""}${dim ? " dim" : ""}`} style={style}
-      onClick={() => onSelect(n.id)} {...hoverProps}>
+  const cls = `node${kindCls}${sel ? " sel" : ""}${dim ? " dim" : ""}`;
+  const body = (
+    <>
       <div className="tt">{n.no && <span className="no">{n.no}</span>}{n.title}</div>
       {n.sub && <div className="st">{rich(n.sub)}</div>}
+      {n.enter && <span className="go">进入工作流 →</span>}
       {n.aip && <span className="aip">{n.aip}</span>}
+    </>
+  );
+  if (n.enter) {
+    return (
+      <a className={cls} style={style} href={`#/s/${n.enter}`} {...hoverProps}>
+        {body}
+      </a>
+    );
+  }
+  return (
+    <div className={cls} style={style} onClick={() => onSelect(n.id)} {...hoverProps}>
+      {body}
     </div>
   );
 }

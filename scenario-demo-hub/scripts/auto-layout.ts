@@ -19,8 +19,8 @@
  * （当前 scenarios/ 下 14 份配置均已启用 autoLayout）。
  */
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, dirname, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   AStarPath,
   ConnDirAll,
@@ -138,6 +138,9 @@ function predictNodeH(n: RawNode): number {
   if (n.aip != null) {
     h += NODE_HAS_AIP_PAD_BOTTOM - NODE_PAD_BOTTOM;
   }
+  if (n.enter) {
+    h += 6 + 16; // .node .go：margin-top 6px + 11px 粗体一行
+  }
   return Math.round(h + 2); // +2 边框/舍入余量，宁可略高不可重叠
 }
 
@@ -157,6 +160,7 @@ interface RawNode {
   title?: string;
   sub?: string;
   aip?: string;
+  enter?: string;
   [k: string]: unknown;
 }
 
@@ -609,6 +613,66 @@ function labelAtForRoute(
   return best ? best.at : [route[0][0], route[0][1] - LABEL_GAP];
 }
 
+/** 每边连接点（libavoid connection pin）。内缩，避免贴角。 */
+export const SIDE_SLOTS = [0.2, 0.35, 0.5, 0.65, 0.8] as const;
+export const MID_SLOT = Math.floor(SIDE_SLOTS.length / 2);
+
+export interface SlotClaim {
+  edgeId: string;
+  end: "src" | "tgt";
+  /** 对端中心在这条边上的投影，已夹到槽位区间 */
+  ideal: number;
+  /** 两端正对且走廊空着：优先占用离 ideal 最近的槽，保证主线能拉直 */
+  direct: boolean;
+}
+
+/**
+ * 同一条边上的连接点分配。
+ * 一条线用中点；多条线按对端投影就近占空槽（可直连的边先占）。
+ */
+export function assignGroupSlots(
+  claims: SlotClaim[],
+): Array<{ edgeId: string; end: "src" | "tgt"; slot: number }> {
+  if (claims.length === 0) return [];
+  if (claims.length === 1) {
+    return [{ edgeId: claims[0].edgeId, end: claims[0].end, slot: MID_SLOT }];
+  }
+  const order = [...claims].sort((a, b) => {
+    if (a.direct !== b.direct) return a.direct ? -1 : 1;
+    const da = Math.abs(a.ideal - 0.5);
+    const db = Math.abs(b.ideal - 0.5);
+    if (Math.abs(da - db) > 1e-6) return da - db;
+    if (Math.abs(a.ideal - b.ideal) > 1e-6) return a.ideal - b.ideal;
+    const byId = a.edgeId.localeCompare(b.edgeId);
+    if (byId !== 0) return byId;
+    return a.end === b.end ? 0 : a.end === "src" ? -1 : 1;
+  });
+  const used = new Set<number>();
+  const out: Array<{ edgeId: string; end: "src" | "tgt"; slot: number }> = [];
+  for (const c of order) {
+    let best = 0;
+    let bestDist = Infinity;
+    let bestCenter = Infinity;
+    for (let s = 0; s < SIDE_SLOTS.length; s++) {
+      if (used.has(s)) continue;
+      const dist = Math.abs(SIDE_SLOTS[s] - c.ideal);
+      const center = Math.abs(SIDE_SLOTS[s] - 0.5);
+      const closer =
+        dist < bestDist - 1e-9 ||
+        (Math.abs(dist - bestDist) <= 1e-9 && center < bestCenter - 1e-9) ||
+        (Math.abs(dist - bestDist) <= 1e-9 && Math.abs(center - bestCenter) <= 1e-9 && s < best);
+      if (closer) {
+        best = s;
+        bestDist = dist;
+        bestCenter = center;
+      }
+    }
+    used.add(best);
+    out.push({ edgeId: c.edgeId, end: c.end, slot: best });
+  }
+  return out;
+}
+
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dir = join(root, "scenarios");
 const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
@@ -616,12 +680,11 @@ const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
 /**
  * 阶段 3：obstacle-router 把全部边一次性正交避障布线。
  *
- * pin 约定（class id 按 shape 独立编号）：1=顶 2=底 3=左 4=右，全部设为
- * 非独占且全方向可见——流程图同一端口多入多出是正常语义；全方向可见让被
- * 同列节点封堵的引脚仍能先横移再纵走，避免"路径不可达"。
+ * pin 约定（对齐 draw.io 多连接点）：每边 5 个槽位、各自独占 classId；
+ * 同节点同边的多条进出线按对端位置均分槽位，避免两线挤进同一箭头。
  *
  * @param flow 已回写节点全局几何的 flow
- * @returns 按 "from→to" 索引的完整正交点串
+ * @returns 按边 id 索引的完整正交点串
  */
 function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
   const nodeById = new Map(flow.nodes.map((n) => [n.id, n]));
@@ -666,20 +729,19 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     router.setRoutingParameter(crossingPenalty, CROSSING_PENALTY);
   }
 
-  // pin class id（按 shape 独立编号）
-  const PIN_TOP = 1;
-  const PIN_BOTTOM = 2;
-  const PIN_LEFT = 3;
-  const PIN_RIGHT = 4;
+  // pin class id：每边多个连接点，互不共用 classId，一槽一线。
+  // 编码 = 边基值 + 槽位序号。方向保持四向可见：外法向会把窄缝里的回头线判成无路。
+  type Side = "top" | "bottom" | "left" | "right";
+  const SIDE_BASE: Record<Side, number> = { top: 100, bottom: 200, left: 300, right: 400 };
 
   // 注意：ShapeRef/ShapeConnectionPin 实例绝不可赋 .id 属性——会覆盖库内部
   // 的 id() 方法；外部一律用 Map 关联。
   const shapes = new Map<string, AnyShape>();
   /** 非障碍节点（routingObstacle:false）的几何盒：不注册 ShapeRef，仅端点挂接用 */
   const phantoms = new Map<string, { x: number; y: number; w: number; h: number }>();
-  /** 构造一个比例偏移引脚并关闭独占（同端口多入多出是流程图正常语义）。 */
-  const makePin = (shape: AnyShape, classId: number, xOff: number, yOff: number): unknown =>
-    ShapeConnectionPin.createForShape(
+  /** 构造边上某一槽位的引脚；独占，一槽一线。 */
+  const makePin = (shape: AnyShape, classId: number, xOff: number, yOff: number): unknown => {
+    const pin = ShapeConnectionPin.createForShape(
       shape as unknown as Parameters<typeof ShapeConnectionPin.createForShape>[0],
       classId,
       xOff,
@@ -688,6 +750,11 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
       0,
       ConnDirAll,
     );
+    (pin as { setExclusive(value: boolean): void }).setExclusive(true);
+    return pin;
+  };
+  const pinClass = (side: Side, slot: number): number =>
+    SIDE_BASE[side] + Math.max(0, Math.min(SIDE_SLOTS.length - 1, slot));
   for (const n of flow.nodes) {
     const x = n.x ?? 0;
     const y = n.y ?? 0;
@@ -699,14 +766,12 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     }
     const rect = new Rectangle(new Point(x, y), new Point(x + n.w, y + h));
     const shape = new ShapeRef(router as unknown as LibRouter, rect) as unknown as AnyShape;
-    const pins = [
-      makePin(shape, PIN_TOP, 0.5, 0.0),
-      makePin(shape, PIN_BOTTOM, 0.5, 1.0),
-      makePin(shape, PIN_LEFT, 0.0, 0.5),
-      makePin(shape, PIN_RIGHT, 1.0, 0.5),
-    ];
-    for (const pin of pins) {
-      (pin as { setExclusive(value: boolean): void }).setExclusive(false);
+    for (let i = 0; i < SIDE_SLOTS.length; i++) {
+      const t = SIDE_SLOTS[i];
+      makePin(shape, pinClass("top", i), t, 0.0);
+      makePin(shape, pinClass("bottom", i), t, 1.0);
+      makePin(shape, pinClass("left", i), 0.0, t);
+      makePin(shape, pinClass("right", i), 1.0, t);
     }
     shapes.set(n.id, shape);
   }
@@ -731,14 +796,11 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     );
   }
 
-  const PIN_BY_SIDE: Record<string, number> = {
-    top: PIN_TOP,
-    bottom: PIN_BOTTOM,
-    left: PIN_LEFT,
-    right: PIN_RIGHT,
-  };
+  const asSide = (v: string | undefined): Side | null =>
+    v === "top" || v === "bottom" || v === "left" || v === "right" ? v : null;
 
-  const choosePins = (e: RawEdge): { srcPin: number; tgtPin: number } => {
+  /** 先选边（上/下/左/右），槽位稍后再按同边多线分配——对齐 draw.io 多连接点。 */
+  const chooseSides = (e: RawEdge): { srcSide: Side; tgtSide: Side } => {
     const s = nodeById.get(e.from);
     const t = nodeById.get(e.to);
     if (!s || !t) throw new Error(`边 ${e.from}→${e.to} 引用了不存在的节点`);
@@ -757,36 +819,176 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
       ? Math.abs(dy) > Math.abs(dx)
       : Math.abs(dy) >= Math.abs(dx) * 0.9;
 
-    let automatic: { srcPin: number; tgtPin: number };
+    let srcSide: Side;
+    let tgtSide: Side;
     if (verticalPreferred) {
-      automatic = dy >= 0
-        ? { srcPin: PIN_BOTTOM, tgtPin: PIN_TOP }
-        : { srcPin: PIN_TOP, tgtPin: PIN_BOTTOM };
+      srcSide = dy >= 0 ? "bottom" : "top";
+      tgtSide = dy >= 0 ? "top" : "bottom";
     } else {
-      automatic = dx >= 0
-        ? { srcPin: PIN_RIGHT, tgtPin: PIN_LEFT }
-        : { srcPin: PIN_LEFT, tgtPin: PIN_RIGHT };
+      srcSide = dx >= 0 ? "right" : "left";
+      tgtSide = dx >= 0 ? "left" : "right";
     }
-
-    // 显式侧边只覆盖对应一端；另一端仍可使用自动推断。
-    return {
-      srcPin: e.fromSide ? (PIN_BY_SIDE[e.fromSide] ?? automatic.srcPin) : automatic.srcPin,
-      tgtPin: e.toSide ? (PIN_BY_SIDE[e.toSide] ?? automatic.tgtPin) : automatic.tgtPin,
-    };
+    srcSide = asSide(e.fromSide) ?? srcSide;
+    tgtSide = asSide(e.toSide) ?? tgtSide;
+    return { srcSide, tgtSide };
   };
 
-  // 保留每个 ConnRef 实例与 flow.edges 对位（库的连接器列表字段/内部顺序均不应假设）
-  const conns: AnyConn[] = [];
+  const OPPOSITE: Record<Side, Side> = {
+    top: "bottom", bottom: "top", left: "right", right: "left",
+  };
+  const nodeBox = (id: string) => {
+    const n = nodeById.get(id);
+    if (!n) throw new Error(`边端点 ${id} 不存在`);
+    return { x: n.x ?? 0, y: n.y ?? 0, w: n.w, h: n.h ?? 0 };
+  };
+  /** 线段是否穿进矩形内部（贴边不算） */
+  const cutsRect = (
+    x1: number, y1: number, x2: number, y2: number,
+    r: { x: number; y: number; w: number; h: number },
+  ): boolean => {
+    const EPS = 1;
+    if (Math.abs(y1 - y2) <= EPS) {
+      return y1 > r.y + EPS && y1 < r.y + r.h - EPS &&
+        Math.max(x1, x2) > r.x + EPS && Math.min(x1, x2) < r.x + r.w - EPS;
+    }
+    if (Math.abs(x1 - x2) <= EPS) {
+      return x1 > r.x + EPS && x1 < r.x + r.w - EPS &&
+        Math.max(y1, y2) > r.y + EPS && Math.min(y1, y2) < r.y + r.h - EPS;
+    }
+    return true;
+  };
+  const cutsAnything = (a: Pt, b: Pt, skip: Set<string>): boolean => {
+    for (const n of flow.nodes) {
+      if (skip.has(n.id) || n.routingObstacle === false) continue;
+      if (cutsRect(a[0], a[1], b[0], b[1], nodeBox(n.id))) return true;
+    }
+    for (const lane of flow.lanes) {
+      const top = lane.top ?? 0;
+      const height = lane.height ?? 0;
+      if (cutsRect(a[0], a[1], b[0], b[1], { x: 0, y: top, w: LABEL_TEXT_RIGHT, h: height })) {
+        return true;
+      }
+    }
+    return false;
+  };
+  /** 两端正对，且重叠区间中线没有别的节点挡住 */
+  const corridorOpen = (e: RawEdge, srcSide: Side, tgtSide: Side): boolean => {
+    if (tgtSide !== OPPOSITE[srcSide]) return false;
+    if (phantoms.has(e.from) || phantoms.has(e.to)) return false;
+    const s = nodeBox(e.from);
+    const t = nodeBox(e.to);
+    const skip = new Set([e.from, e.to]);
+    if (srcSide === "left" || srcSide === "right") {
+      const lo = Math.max(s.y, t.y);
+      const hi = Math.min(s.y + s.h, t.y + t.h);
+      if (hi - lo < 8) return false;
+      const y = Math.round((lo + hi) / 2);
+      const x1 = srcSide === "right" ? s.x + s.w : s.x;
+      const x2 = tgtSide === "right" ? t.x + t.w : t.x;
+      return !cutsAnything([x1, y], [x2, y], skip);
+    }
+    const lo = Math.max(s.x, t.x);
+    const hi = Math.min(s.x + s.w, t.x + t.w);
+    if (hi - lo < 8) return false;
+    const x = Math.round((lo + hi) / 2);
+    const y1 = srcSide === "bottom" ? s.y + s.h : s.y;
+    const y2 = tgtSide === "bottom" ? t.y + t.h : t.y;
+    return !cutsAnything([x, y1], [x, y2], skip);
+  };
+  const idealT = (
+    self: { x: number; y: number; w: number; h: number },
+    side: Side,
+    peerAbs: number,
+  ): number => {
+    const alongX = side === "top" || side === "bottom";
+    const origin = alongX ? self.x : self.y;
+    const span = alongX ? self.w : self.h;
+    const t = span === 0 ? 0.5 : (peerAbs - origin) / span;
+    return Math.min(SIDE_SLOTS[SIDE_SLOTS.length - 1], Math.max(SIDE_SLOTS[0], t));
+  };
+
+  /** 同节点同边：一条线用中点；多条线按对端投影就近占空槽。 */
+  const edgeSides = flow.edges.map((e) => ({ e, ...chooseSides(e) }));
+  const slotOf = new Map<string, { src: number; tgt: number }>();
+  {
+    const groups = new Map<string, SlotClaim[]>();
+    for (const { e, srcSide, tgtSide } of edgeSides) {
+      if (!e.id) throw new Error(`边 ${e.from}→${e.to} 缺少 id`);
+      const s = nodeBox(e.from);
+      const t = nodeBox(e.to);
+      const direct = corridorOpen(e, srcSide, tgtSide);
+      const srcPeer = srcSide === "top" || srcSide === "bottom" ? t.x + t.w / 2 : t.y + t.h / 2;
+      const tgtPeer = tgtSide === "top" || tgtSide === "bottom" ? s.x + s.w / 2 : s.y + s.h / 2;
+      const srcKey = `${e.from}|${srcSide}`;
+      const tgtKey = `${e.to}|${tgtSide}`;
+      if (!groups.has(srcKey)) groups.set(srcKey, []);
+      if (!groups.has(tgtKey)) groups.set(tgtKey, []);
+      groups.get(srcKey)!.push({
+        edgeId: e.id, end: "src", direct, ideal: idealT(s, srcSide, srcPeer),
+      });
+      groups.get(tgtKey)!.push({
+        edgeId: e.id, end: "tgt", direct, ideal: idealT(t, tgtSide, tgtPeer),
+      });
+    }
+    for (const claims of groups.values()) {
+      if (claims.length > SIDE_SLOTS.length) {
+        throw new Error(
+          `同边连接点需求 ${claims.length} 超过槽位 ${SIDE_SLOTS.length}——拆分节点或增加 SIDE_SLOTS`,
+        );
+      }
+      for (const hit of assignGroupSlots(claims)) {
+        const cur = slotOf.get(hit.edgeId) ?? { src: MID_SLOT, tgt: MID_SLOT };
+        if (hit.end === "src") cur.src = hit.slot;
+        else cur.tgt = hit.slot;
+        slotOf.set(hit.edgeId, cur);
+      }
+    }
+  }
+
+  const portPoint = (id: string, side: Side, slot: number): Pt => {
+    const b = nodeBox(id);
+    const t = SIDE_SLOTS[slot];
+    if (side === "top") return [Math.round(b.x + b.w * t), b.y];
+    if (side === "bottom") return [Math.round(b.x + b.w * t), b.y + b.h];
+    if (side === "left") return [b.x, Math.round(b.y + b.h * t)];
+    return [b.x + b.w, Math.round(b.y + b.h * t)];
+  };
+  /**
+   * 两端连接点已经共线，且中间没有别的节点：直接一段。
+   * 上下节点缝（常为 10px）小于双侧 shapeBuffer，libavoid 会拐到节点外侧再绕回来。
+   */
+  const straightRoutes = new Map<string, Pt[]>();
+  for (const { e, srcSide, tgtSide } of edgeSides) {
+    if (phantoms.has(e.from) || phantoms.has(e.to)) continue;
+    const slots = slotOf.get(e.id!) ?? { src: MID_SLOT, tgt: MID_SLOT };
+    const a = portPoint(e.from, srcSide, slots.src);
+    const b = portPoint(e.to, tgtSide, slots.tgt);
+    const dx = Math.abs(a[0] - b[0]);
+    const dy = Math.abs(a[1] - b[1]);
+    if ((dx <= 1 && dy <= 1) || (dx > 1 && dy > 1)) continue;
+    const line: Pt[] = dx <= 1 ? [[a[0], a[1]], [a[0], b[1]]] : [[a[0], a[1]], [b[0], a[1]]];
+    if (line[0][0] === line[1][0] && line[0][1] === line[1][1]) continue;
+    if (cutsAnything(line[0], line[1], new Set([e.from, e.to]))) continue;
+    straightRoutes.set(e.id!, line);
+  }
+
+  const connById = new Map<string, AnyConn>();
   /**
    * 非障碍（phantom）端点挂接：贴边中点按「面向对端 + 横条感知」选取。
    * 横条（w≥4h）几何中心无意义：无论横向距离多远一律上/下边贴接，
    * 落点水平夹在「对端中心」与「横条内缩范围」之间，保证从外部垂直接入，
    * 不出现沿横条内部穿行到边缘的刺线。
    */
-  const nodeBox = (id: string) => {
-    const n = nodeById.get(id);
-    if (!n) throw new Error(`边端点 ${id} 不存在`);
-    return { x: n.x ?? 0, y: n.y ?? 0, w: n.w, h: n.h ?? 0 };
+  const blocksVertical = (x: number, y0: number, y1: number, skip: Set<string>): boolean => {
+    const top = Math.min(y0, y1);
+    const bot = Math.max(y0, y1);
+    return flow.nodes.some((n) => {
+      if (skip.has(n.id) || n.routingObstacle === false || (n.kind ?? "normal") === "bar") return false;
+      const nx = n.x ?? 0;
+      const ny = n.y ?? 0;
+      const nh = n.h ?? 0;
+      return x > nx + 1 && x < nx + n.w - 1 && bot > ny + 1 && top < ny + nh - 1;
+    });
   };
   const phantomAttach = (
     selfId: string,
@@ -798,7 +1000,26 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     const dxC = b.x + b.w / 2 - (o.x + o.w / 2);
     const vertical = b.w >= b.h * 4 || Math.abs(dyC) >= Math.abs(dxC);
     if (vertical) {
-      const x = Math.min(Math.max(o.x + o.w / 2, b.x + 40), b.x + b.w - 40);
+      const lo = b.x + 40;
+      const hi = b.x + b.w - 40;
+      const yEdge = dyC >= 0 ? b.y : b.y + b.h;
+      const yOther = dyC >= 0 ? o.y + o.h : o.y;
+      let x = Math.min(Math.max(o.x + o.w / 2, lo), hi);
+      // 对端正下方被节点挡住时，落到横条上最近的空列，避免贴画布外缘绕行
+      if (blocksVertical(x, yEdge, yOther, new Set([selfId, otherId]))) {
+        const prefer = o.x + o.w / 2;
+        let found: number | null = null;
+        for (let d = 8; d <= hi - lo && found == null; d += 8) {
+          for (const cand of [prefer - d, prefer + d]) {
+            if (cand < lo || cand > hi) continue;
+            if (!blocksVertical(cand, yEdge, yOther, new Set([selfId, otherId]))) {
+              found = cand;
+              break;
+            }
+          }
+        }
+        if (found != null) x = Math.round(found);
+      }
       return dyC >= 0
         ? { pt: [x, b.y], facing: "top" }
         : { pt: [x, b.y + b.h], facing: "bottom" };
@@ -806,11 +1027,11 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     const y = Math.min(Math.max(o.y + o.h / 2, b.y + 20), b.y + b.h - 20);
     return dxC >= 0 ? { pt: [b.x, y], facing: "left" } : { pt: [b.x + b.w, y], facing: "right" };
   };
-  const OPPOSITE_PIN: Record<string, number> = {
-    top: PIN_BOTTOM, bottom: PIN_TOP, left: PIN_RIGHT, right: PIN_LEFT,
-  };
-  for (const e of flow.edges) {
-    let { srcPin, tgtPin } = choosePins(e);
+  for (const { e, srcSide, tgtSide } of edgeSides) {
+    if (straightRoutes.has(e.id!)) continue;
+    const slots = slotOf.get(e.id!) ?? { src: MID_SLOT, tgt: MID_SLOT };
+    let srcPin = pinClass(srcSide, slots.src);
+    let tgtPin = pinClass(tgtSide, slots.tgt);
     const srcShape = shapes.get(e.from);
     const tgtShape = shapes.get(e.to);
     const srcPhantom = phantoms.has(e.from);
@@ -825,8 +1046,9 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     let tgtEnd: unknown;
     const srcPt = srcPhantom ? phantomAttach(e.from, e.to) : null;
     const tgtPt = tgtPhantom ? phantomAttach(e.to, e.from) : null;
-    if (srcPt) tgtPin = OPPOSITE_PIN[srcPt.facing];
-    if (tgtPt) srcPin = OPPOSITE_PIN[tgtPt.facing];
+    // phantom 贴边后，对端改走相对边的中点槽（仍保持多点能力的默认中位）
+    if (srcPt) tgtPin = pinClass(OPPOSITE[srcPt.facing], MID_SLOT);
+    if (tgtPt) srcPin = pinClass(OPPOSITE[tgtPt.facing], MID_SLOT);
     srcEnd = srcPt
       ? ConnEnd.fromPoint(new Point(srcPt.pt[0], srcPt.pt[1]))
       : ConnEnd.fromShapePin(
@@ -848,15 +1070,15 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     if (CROSSING_PENALTY > 0 && e.routeRole === "primary") {
       (conn as { setHateCrossings?(v: boolean): void }).setHateCrossings?.(true);
     }
-    conns.push(conn);
+    connById.set(e.id!, conn);
   }
 
   router.processTransaction();
 
-  const routes = new Map<string, Pt[]>();
-  flow.edges.forEach((e, i) => {
-    const displayRoute = conns[i]?.displayRoute();
-    if (!displayRoute) return;
+  const routes = new Map<string, Pt[]>(straightRoutes);
+  for (const [id, conn] of connById) {
+    const displayRoute = conn.displayRoute();
+    if (!displayRoute) continue;
     const pts: Pt[] = [];
     for (let i2 = 0; i2 < displayRoute.size(); i2++) {
       const p = displayRoute.at(i2);
@@ -866,9 +1088,8 @@ function routeAllEdges(flow: RawFlow): Map<string, Pt[]> {
     const deduped = pts.filter(
       (p, i2) => i2 === 0 || p[0] !== pts[i2 - 1][0] || p[1] !== pts[i2 - 1][1],
     );
-    if (!e.id) throw new Error(`边 ${e.from}→${e.to} 缺少 id（路线键须唯一）`);
-    routes.set(e.id, deduped);
-  });
+    routes.set(id, deduped);
+  }
   return routes;
 }
 
@@ -1017,8 +1238,14 @@ async function main(): Promise<void> {
         throw new Error(`${file}：边 ${e.id}（${e.from}→${e.to}）缺少布线产物`);
       }
       e.route = hit;
-      // 标签位置一律按最终路线重新计算，旧坐标（含历史手工值）每次确定性覆盖
-      if (e.label) e.labelAt = labelAtForRoute(e.route, e.label, nodeBoxes);
+      // 标签避障排除本边两端（允许贴端点；压端点由 validate 记 warn）
+      if (e.label) {
+        const avoid = nodeBoxes.filter((_, i) => {
+          const id = flow.nodes[i].id;
+          return id !== e.from && id !== e.to;
+        });
+        e.labelAt = labelAtForRoute(e.route, e.label, avoid);
+      }
       delete e.via;
       delete e.fromSide;
       delete e.toSide;
@@ -1042,7 +1269,10 @@ async function main(): Promise<void> {
   );
 }
 
-main().catch((err: unknown) => {
-  console.error("✘ 自动布局失败：", err);
-  process.exit(1);
-});
+const entry = process.argv[1];
+if (entry && import.meta.url === pathToFileURL(resolve(entry)).href) {
+  main().catch((err: unknown) => {
+    console.error("✘ 自动布局失败：", err);
+    process.exit(1);
+  });
+}
