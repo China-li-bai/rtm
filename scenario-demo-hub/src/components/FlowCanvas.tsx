@@ -6,6 +6,7 @@ import { FlowToolbar } from "./flow/FlowToolbar";
 import { LaneBand } from "./flow/LaneBand";
 import { MiniMap } from "./flow/MiniMap";
 import { NodeBox, nodeH } from "./flow/NodeBox";
+import { rich } from "../lib/rich";
 
 type Flow = ScenarioConfig["flow"];
 
@@ -266,7 +267,7 @@ export function FlowCanvas({ flow, selectedId, onSelect, viewH }: Props) {
 
         {flow.dataSupport && (
           <div className="datasup">
-            <b>数据支撑</b>{flow.dataSupport.replace(/^数据支撑/, "")}
+            <b>数据支撑</b>{rich(flow.dataSupport.replace(/^数据支撑/, ""))}
           </div>
         )}
       </div>

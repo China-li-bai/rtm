@@ -152,7 +152,7 @@ export function BlueprintCanvas({ flow, selectedId, onSelect }: Props) {
           ))}
         </div>
 
-        {flow.dataSupport && <div className="datasup">{flow.dataSupport}</div>}
+        {flow.dataSupport && <div className="datasup">{rich(flow.dataSupport)}</div>}
       </div>
     );
   }
@@ -244,7 +244,7 @@ export function BlueprintCanvas({ flow, selectedId, onSelect }: Props) {
         )}
       </div>
 
-      {flow.dataSupport && <div className="datasup">{flow.dataSupport}</div>}
+      {flow.dataSupport && <div className="datasup">{rich(flow.dataSupport)}</div>}
     </div>
   );
 }

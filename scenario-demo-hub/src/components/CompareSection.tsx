@@ -1,4 +1,5 @@
 import type { ScenarioConfig } from "../schema/scenario";
+import { rich } from "../lib/rich";
 
 /** 页面级前后对比（人力/金钱/时间/数据）+ 口径说明（红线5） */
 export function CompareSection({ cfg, no }: { cfg: ScenarioConfig; no: string }) {
@@ -20,7 +21,7 @@ export function CompareSection({ cfg, no }: { cfg: ScenarioConfig; no: string })
           </div>
         ))}
       </div>
-      <div className="note">{cfg.metricNote}</div>
+      <div className="note">{rich(cfg.metricNote)}</div>
     </>
   );
 }

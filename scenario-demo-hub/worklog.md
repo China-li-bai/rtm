@@ -1004,3 +1004,30 @@ D. contract-blueprint 交叉/标签存量治理（勿全局开 crossingPenalty�
 **改动**：`scripts/auto-layout.ts` 每边 5 个独占 pin 槽；同节点同边进出线按对端位置均分。标签避障排除本边端点。
 
 **结果**：ai-recommend 汇入「资格过滤」三点 y=143/166/189；validate 0 error；geometry 14/14。浏览器可见三条分岔入边。结束 2026-10-10 18:05 CST。
+
+---
+
+## 任务AJ｜浏览器子代理实测审核页面布局与交互（2026-11-02 19:50 CST）
+
+**做法**：`npm run dev` 起 localhost:5173，派 Browser 子代理按前端治理五维（黑话/打补丁布局/大字报/跨视图不一致/原始报错）抽验主页 + 4 场景页（ai-recommend / capability-map / overall-flow / data-governance）+ 404 态，交互逐项点测，DOM 几何量测替代截图（原生视口 hidden，仅 1 张截图 shots/audit-01-home-viewport.png 可用）。
+
+**结论（未改代码）**：
+- 高危 6 类：capability-map 的 `<b>` 原始标签上屏 + `knowledge/…md（勿手改本文件）`内部路径裸奔；data-governance 节点副标题直出 `std_title`、页尾 346 字技术长段（seed=42/置信区间/判卷）；overall-flow 数据支撑条直出 Milvus/ES/Schema；35 个 G-/S-/C-/D- 编号与 AIP-* 徽标当主标签；ai-recommend 必现 React 渲染期 setState 报错；窄视口 useScale 缩到 0.46 导致有效字号 5–10px、按钮 12×11 屏幕像素、顶部导航点击失效。
+- 图例与实际边型不符 2 处（overall-flow 缺第三种、data-governance 虚标橙虚线），根因是分区标题硬编码与工具栏动态 chip 两套逻辑。
+- 交互层健康：节点→抽屉、✕/遮罩/ESC 关闭、缩放/平移/适应/图例开关、跨页下钻均实测有响应；仅小地图点击无响应、键盘不可达（0 条 :focus）扣分。
+- 「场景」口径三处不一致（hero 14 个 / 卡片 3 个 / 页内 S1-S3）。
+
+**下一步建议（Top3）**：1) dataSupport/metricNote 接 rich() 渲染器并撤下内部路径；2) 全字段过一遍 scripts/ux-jargon.json 术语净化 + 拆 346 字长段；3) useScale 设最小缩放下限并让工具栏脱离整页缩放。结束 2026-11-02 19:50 CST。
+
+---
+
+## 任务AK｜修复 Top1：富文本统一过 rich() + 撤内部文件路径（2026-11-03 10:50 CST）
+
+**改动（渲染层 3 文件 + 文案层 6 文件）**：
+- BlueprintCanvas 两处 `.datasup`、FlowCanvas 一处 `.datasup`、CompareSection 的 `.note`（metricNote）统一接 `src/lib/rich.tsx` 的 rich()；消除 `<b>` 原样上屏。metricNote 此前在任何页面都未过 rich()，属全局潜伏位点。
+- capability-map.json 图例行撤「｜口径源：knowledge/…​.md（1:1 生成，勿手改本文件）」；同步改生成器 `scripts/gen_capability_map.py`（否则重跑回归）。
+- 5 份场景 metricNote（overall-flow / data-governance / cat-governance / ai-search / ai-data-platform）统一撤「见 STATUS.md」仓库文件名；〔实测〕/示意 标注保留，不碰红线5 口径机检。
+
+**验证**：tsc 0 错；validate 15 份 0 错误（36 警告均为既有几何类）；Browser 子代理 DOM 复验 5/5 通过：`.datasup`/`.note` 内真实 `<b>` 节点（fontWeight 700）、全局无「勿手改」「knowledge/」「STATUS.md」残留、控制台无新增报错。未实测截图（原生视口限制，以 DOM 量测为准）。
+
+**遗留（不属本单）**：ai-data-platform.json 节点 trace chips 里的 `PIM_AUTOMATED_PRODUCTION.md`（追溯链字段，语义上是给评审方的溯源 chip，待确认受众后处置）；审核 Top2 术语净化（std_title/Milvus/ES 等）与 Top3 窄视口缩放待排。结束 2026-11-03 11:15 CST。
