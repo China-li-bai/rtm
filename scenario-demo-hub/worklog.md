@@ -1031,3 +1031,11 @@ D. contract-blueprint 交叉/标签存量治理（勿全局开 crossingPenalty�
 **验证**：tsc 0 错；validate 15 份 0 错误（36 警告均为既有几何类）；Browser 子代理 DOM 复验 5/5 通过：`.datasup`/`.note` 内真实 `<b>` 节点（fontWeight 700）、全局无「勿手改」「knowledge/」「STATUS.md」残留、控制台无新增报错。未实测截图（原生视口限制，以 DOM 量测为准）。
 
 **遗留（不属本单）**：ai-data-platform.json 节点 trace chips 里的 `PIM_AUTOMATED_PRODUCTION.md`（追溯链字段，语义上是给评审方的溯源 chip，待确认受众后处置）；审核 Top2 术语净化（std_title/Milvus/ES 等）与 Top3 窄视口缩放待排。结束 2026-11-03 11:15 CST。
+
+---
+
+## 任务AL｜打成可双击阅读的单页（2026-11-18 12:43 CST）
+
+**做法**：沿用现成 `pnpm run build`（自动布局 → 校验 → vite-plugin-singlefile）。未改源码。
+
+**产物**：`dist/index.html` 762KB，无外部脚本/样式引用。校验 15 份场景 0 错误、36 条既有几何警告。预览 http://127.0.0.1:4173/ 首页 14 张卡片可见，进入「四大模块 · 子能力全景」后 hash 路由 `#/s/capability-map` 正常。已用系统浏览器打开该文件。结束 2026-11-18 12:45 CST。
